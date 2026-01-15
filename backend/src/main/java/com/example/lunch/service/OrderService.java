@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +31,11 @@ public class OrderService {
 
         String id = UUID.randomUUID().toString();
         order.setId(id);
-        order.setCreatedAt(LocalDateTime.now().toString());
+
+        // Use Taiwan timezone
+        ZonedDateTime nowTaipei = ZonedDateTime.now(ZoneId.of("Asia/Taipei"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        order.setCreatedAt(nowTaipei.format(formatter));
 
         // Full Rewrite Approach to ensure single TOTAL row and avoid intercalation
         List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
@@ -78,8 +84,8 @@ public class OrderService {
         totalRow.add("");
         totalRow.add(totalCount + " 份");
         totalRow.add(totalSum);
-        totalRow.add("");
-        totalRow.add("");
+        totalRow.add(""); // Note column
+        totalRow.add(""); // CreatedAt column
         realRows.add(totalRow);
 
         repository.clearData(RANGE_ORDERS);

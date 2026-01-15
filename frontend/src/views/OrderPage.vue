@@ -17,7 +17,7 @@
           </button>
           
           <!-- View Original Menu Button -->
-          <a v-if="group.menuImageUrl" :href="group.menuImageUrl" target="_blank" class="px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors flex items-center gap-1 shadow-sm border border-stone-200">
+          <a v-if="group.menuImageUrl" :href="getApiUrl(group.menuImageUrl)" target="_blank" class="px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors flex items-center gap-1 shadow-sm border border-stone-200">
              🖼️ 查看原圖
           </a>
         </div>
@@ -294,7 +294,7 @@ const formatDateShort = (timestamp) => {
 
 const fetchGroupData = async () => {
     try {
-        const res = await axios.get(`/api/groups/${groupId}`)
+        const res = await axios.get(getApiUrl(`/api/groups/${groupId}`))
         group.value = res.data.group
         orders.value = res.data.orders || []
     } catch (err) {

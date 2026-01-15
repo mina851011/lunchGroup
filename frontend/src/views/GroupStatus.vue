@@ -12,7 +12,7 @@ const loading = ref(true)
 
 const fetchGroup = async () => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/groups/${groupId}`)
+    const res = await axios.get(`/api/groups/${groupId}`)
     group.value = res.data.group
     orders.value = res.data.orders
   } catch (e) {
