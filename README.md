@@ -2,7 +2,12 @@
 
 這是一個專為辦公室設計的點餐管理系統，旨在簡化團購流程、自動加總訂單並整合 Google Sheets 作為後端儲存。
 
-## 🌟 主要功能
+## � 線上展示 (Demo)
+- **前端預覽**：[https://mina851011.github.io/lunchGroup/](https://mina851011.github.io/lunchGroup/)
+> [!NOTE]
+> 由於 GitHub Pages 僅託管靜態前端，若後端未部署，功能（如點餐、OCR）將暫時無法使用。
+
+## �🌟 主要功能
 
 - **🚀 快速建立團購**：輸入店家名稱、截單時間即可開啟。
 - **🤖 智慧菜單辨識 (AI OCR)**：支援直接上傳菜單圖片，自動辨識品項與價格。
@@ -29,7 +34,10 @@ cd lunchGroup
 ### 2. 後端設置 (Spring Boot)
 - 進入 `backend/` 目錄。
 - 複製 `src/main/resources/application.properties.example` 為 `application.properties`。
-- 填入您的 `google.sheets.id` 與 Google Service Account 金鑰路徑。
+- **本地開發**：填入 `google.sheets.spreadsheet-id` 並將金鑰 JSON 放在指定路徑。
+- **雲端部署 (Render/Koyeb)**：
+  - 設定環境變數 `GOOGLE_SHEETS_SPREADSHEET_ID`。
+  - 設定環境變數 `GOOGLE_SHEETS_CREDENTIALS_JSON`，直接把 **整份 JSON 檔案的內容** 貼進去。系統會優先讀取此變數。
 - 執行專案：
 ```bash
 ./mvnw spring-boot:run

@@ -1,7 +1,10 @@
 # Google Sheets Configuration
 # Get these values from your Google Cloud Console
 google.sheets.application-name=LunchOrderingSystem
+# Credentials path (Local Dev)
 google.sheets.credentials-path=src/main/resources/credentials.json
+# Credentials JSON (Cloud Deployment, paste raw JSON content here or set via ENV)
+# google.sheets.credentials-json=${GOOGLE_CREDENTIALS_JSON:}
 google.sheets.spreadsheet-id=YOUR_SPREADSHEET_ID_HERE
 
 # Gemini API Configuration

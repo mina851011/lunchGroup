@@ -16,9 +16,11 @@ import com.example.lunch.model.Order;
 import com.example.lunch.model.Restaurant;
 
 import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +43,9 @@ public class GoogleSheetsRepository {
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
 
+    @Value("${google.sheets.credentials-json:}")
+    private String credentialsJson;
+
     private Sheets sheetsService;
     private boolean isMockMode = false;
     private List<List<Object>> mockData = new ArrayList<>();
@@ -52,30 +57,48 @@ public class GoogleSheetsRepository {
 
     @PostConstruct
     public void init() throws IOException, GeneralSecurityException {
-        // Check if credentials file exists
+        // Try Environment Variable JSON first
+        if (credentialsJson != null && !credentialsJson.trim().isEmpty()) {
+            try {
+                log.info("Initializing Google Sheets service with credentials-json (Env Var)");
+                GoogleCredentials credentials = GoogleCredentials.fromStream(
+                        new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8)))
+                        .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
+
+                initializeSheetsService(credentials);
+                return;
+            } catch (Exception e) {
+                log.error("Failed to load credentials from JSON: {}", e.getMessage());
+            }
+        }
+
+        // Fallback to File path
         File textFile = new File(credentialsPath);
         if (!textFile.exists()) {
-            System.out.println("⚠️ WARNING: credentials.json not found. Running in MOCK MODE.");
+            log.warn("credentials.json not found at {}. Running in MOCK MODE.", credentialsPath);
             isMockMode = true;
             return;
         }
 
         try {
-            // Load credentials
-            GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsPath))
+            log.info("Initializing Google Sheets service with credentials-path: {}", credentialsPath);
+            GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(textFile))
                     .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
 
-            sheetsService = new Sheets.Builder(
-                    GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(),
-                    new HttpCredentialsAdapter(credentials))
-                    .setApplicationName(applicationName)
-                    .build();
+            initializeSheetsService(credentials);
         } catch (Exception e) {
-            System.err.println("Failed to initialize Google Sheets service: " + e.getMessage());
-            System.err.println("Fallback to MOCK MODE.");
+            log.error("Failed to initialize Google Sheets service from file: {}", e.getMessage());
             isMockMode = true;
         }
+    }
+
+    private void initializeSheetsService(GoogleCredentials credentials) throws GeneralSecurityException, IOException {
+        sheetsService = new Sheets.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                GsonFactory.getDefaultInstance(),
+                new HttpCredentialsAdapter(credentials))
+                .setApplicationName(applicationName)
+                .build();
     }
 
     public List<List<Object>> readData(String range) throws IOException {
