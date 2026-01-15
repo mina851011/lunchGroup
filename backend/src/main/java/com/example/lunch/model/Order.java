@@ -22,4 +22,5 @@ public class Order {
     private Integer totalPrice;
     private String note;
     private String createdAt;
+    private Boolean paid; // 是否已收款
 }

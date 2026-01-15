@@ -124,7 +124,96 @@ public class OrderService {
                         .totalPrice(Integer.parseInt(row.get(7).toString()))
                         .note(row.size() >= 9 ? row.get(8).toString() : "")
                         .createdAt(row.size() >= 10 ? row.get(9).toString() : "")
+                        .paid(row.size() >= 11 && "true".equalsIgnoreCase(row.get(10).toString()))
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public boolean deleteOrder(String groupId, String orderId) throws IOException {
+        List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
+        if (allRows == null || allRows.isEmpty()) {
+            return false;
+        }
+
+        List<List<Object>> remainingRows = new ArrayList<>();
+        boolean found = false;
+
+        for (List<Object> row : allRows) {
+            if (row.size() >= 2 && row.get(0).toString().equals(orderId)
+                    && row.get(1).toString().equals(groupId)) {
+                found = true;
+                continue; // Skip this row (delete it)
+            }
+            if (!"TOTAL".equals(row.get(0).toString())) {
+                remainingRows.add(row);
+            }
+        }
+
+        if (!found) {
+            return false;
+        }
+
+        // Recalculate total
+        int totalSum = 0;
+        int totalCount = 0;
+        for (List<Object> r : remainingRows) {
+            if (r.size() >= 8) {
+                try {
+                    totalSum += Integer.parseInt(r.get(7).toString());
+                    totalCount++;
+                } catch (Exception e) {
+                }
+            }
+        }
+
+        // Add total row
+        List<Object> totalRow = new ArrayList<>();
+        totalRow.add("TOTAL");
+        totalRow.add("");
+        totalRow.add("---");
+        totalRow.add("總計");
+        totalRow.add("");
+        totalRow.add("");
+        totalRow.add(totalCount + " 份");
+        totalRow.add(totalSum);
+        totalRow.add("");
+        totalRow.add("");
+        totalRow.add("");
+        remainingRows.add(totalRow);
+
+        repository.clearData(RANGE_ORDERS);
+        if (!remainingRows.isEmpty()) {
+            repository.updateData(RANGE_ORDERS, remainingRows);
+        }
+
+        return true;
+    }
+
+    public boolean updatePaymentStatus(String groupId, String orderId, boolean paid) throws IOException {
+        List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
+        if (allRows == null || allRows.isEmpty()) {
+            return false;
+        }
+
+        boolean found = false;
+        for (List<Object> row : allRows) {
+            if (row.size() >= 2 && row.get(0).toString().equals(orderId)
+                    && row.get(1).toString().equals(groupId)) {
+                // Ensure row has 11 columns
+                while (row.size() < 11) {
+                    row.add("");
+                }
+                row.set(10, paid ? "true" : "false");
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            repository.clearData(RANGE_ORDERS);
+            repository.updateData(RANGE_ORDERS, allRows);
+        }
+
+        return found;
     }
 }

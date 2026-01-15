@@ -20,6 +20,14 @@
           <a v-if="group.menuImageUrl" :href="getApiUrl(group.menuImageUrl)" target="_blank" class="px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors flex items-center gap-1 shadow-sm border border-stone-200">
              🖼️ 查看原圖
           </a>
+          
+          <!-- Settlement Page Button -->
+          <router-link 
+            :to="`/group/${group.id}/settlement`"
+            class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold hover:bg-green-200 transition-colors flex items-center gap-1 shadow-sm border border-green-200"
+          >
+            💰 結算收款
+          </router-link>
         </div>
         <h1 class="text-3xl font-bold text-mocha-dark">{{ group.name }}</h1>
         <p class="text-mocha-text flex items-center justify-center gap-2">
@@ -93,19 +101,16 @@
                     v-model="form.itemName" 
                     type="text" 
                     required
-                    class="w-full bg-stone-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-mocha-primary/50 text-mocha-dark placeholder-stone-300 transition-all"
-                    placeholder="例如：排骨飯"
+                    readonly
+                    class="w-full bg-stone-100 border-none rounded-xl px-4 py-3 text-mocha-dark cursor-not-allowed"
+                    placeholder="請從上方選擇餐點"
                   >
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-mocha-text mb-1">價格</label>
-                  <input 
-                    v-model.number="form.basePrice" 
-                    type="number" 
-                    required
-                    class="w-full bg-stone-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-mocha-primary/50 text-mocha-dark placeholder-stone-300 transition-all text-center"
-                    placeholder="0"
-                  >
+                  <div class="w-full bg-stone-100 rounded-xl px-4 py-3 text-mocha-dark text-center font-bold">
+                    ${{ form.basePrice || 0 }}
+                  </div>
                 </div>
               </div>
 
@@ -214,6 +219,16 @@
                         {{ order.note }}
                     </p>
                  </div>
+                 <button 
+                   v-if="!isExpired"
+                   @click="deleteOrder(order.id)"
+                   class="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                   title="刪除訂單"
+                 >
+                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                   </svg>
+                 </button>
               </div>
             </div>
           </div>
@@ -338,6 +353,18 @@ const submitOrder = async () => {
         alert('訂單送出失敗，請稍後再試')
     } finally {
         submitting.value = false
+    }
+}
+
+const deleteOrder = async (orderId) => {
+    if (!confirm('確定要刪除這筆訂單嗎？')) return
+    
+    try {
+        await axios.delete(`/api/groups/${groupId}/orders/${orderId}`)
+        await fetchGroupData()
+    } catch (err) {
+        console.error("Delete error", err)
+        alert('刪除失敗，請稍後再試')
     }
 }
 

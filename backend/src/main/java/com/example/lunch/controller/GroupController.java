@@ -83,4 +83,43 @@ public class GroupController {
         order.setGroupId(id);
         return ResponseEntity.ok(orderService.addOrder(order));
     }
+
+    @DeleteMapping("/{groupId}/orders/{orderId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable String groupId, @PathVariable String orderId) {
+        try {
+            boolean deleted = orderService.deleteOrder(groupId, orderId);
+            if (deleted) {
+                return ResponseEntity.ok(Map.of("message", "Order deleted successfully"));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete order: " + e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{groupId}/orders/{orderId}/paid")
+    public ResponseEntity<?> updatePaymentStatus(
+            @PathVariable String groupId,
+            @PathVariable String orderId,
+            @RequestBody Map<String, Boolean> payload) {
+        try {
+            Boolean paid = payload.get("paid");
+            if (paid == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing 'paid' field"));
+            }
+            boolean updated = orderService.updatePaymentStatus(groupId, orderId, paid);
+            if (updated) {
+                return ResponseEntity.ok(Map.of("message", "Payment status updated"));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update payment status: " + e.getMessage()));
+        }
+    }
 }

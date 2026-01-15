@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import OrderPage from '../views/OrderPage.vue'
 import GroupStats from '../views/GroupStats.vue'
+import SettlementPage from '../views/SettlementPage.vue'
 
 const routes = [
     {
@@ -18,6 +19,11 @@ const routes = [
         path: '/group/:groupId/stats',
         name: 'Stats',
         component: GroupStats
+    },
+    {
+        path: '/group/:groupId/settlement',
+        name: 'Settlement',
+        component: SettlementPage
     }
 ]
 
