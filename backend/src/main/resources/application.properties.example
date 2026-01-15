@@ -1,0 +1,11 @@
+# Google Sheets Configuration
+# Get these values from your Google Cloud Console
+google.sheets.application-name=LunchOrderingSystem
+google.sheets.credentials-path=src/main/resources/credentials.json
+google.sheets.spreadsheet-id=YOUR_SPREADSHEET_ID_HERE
+
+# Gemini API Configuration
+gemini.api.key=YOUR_GEMINI_API_KEY_HERE
+
+# Server Port
+server.port=8080
