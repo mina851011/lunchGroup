@@ -34,13 +34,13 @@ import java.util.stream.Collectors;
 @Repository
 public class GoogleSheetsRepository {
 
-    @Value("${google.sheets.application-name}")
+    @Value("${google.sheets.application-name:LunchOrderingSystem}")
     private String applicationName;
 
-    @Value("${google.sheets.credentials-path}")
+    @Value("${google.sheets.credentials-path:src/main/resources/credentials.json}")
     private String credentialsPath;
 
-    @Value("${google.sheets.spreadsheet-id}")
+    @Value("${google.sheets.spreadsheet-id:}")
     private String spreadsheetId;
 
     @Value("${google.sheets.credentials-json:}")

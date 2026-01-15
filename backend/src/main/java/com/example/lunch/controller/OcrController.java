@@ -9,14 +9,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/ocr")
 public class OcrController {
 
-    @Value("${gemini.api.key}")
+    @Value("${gemini.api.key:}")
     private String geminiApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
