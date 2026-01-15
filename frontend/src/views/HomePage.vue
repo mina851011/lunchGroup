@@ -77,7 +77,7 @@
             
             <div class="flex items-center gap-2">
                 <!-- VIEW ORIGINAL MENU BUTTON -->
-                <a v-if="menuImageUrl" :href="menuImageUrl" target="_blank" class="text-xs font-bold text-mocha-primary bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1 shadow-sm">
+                <a v-if="menuImageUrl" :href="getApiUrl(menuImageUrl)" target="_blank" class="text-xs font-bold text-mocha-primary bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 hover:bg-orange-100 transition-all flex items-center gap-1 shadow-sm">
                     🖼️ 查看原始圖片
                 </a>
                 <!-- UPLOAD/UPDATE IMAGE BUTTON (Standalone upload) -->
@@ -88,7 +88,7 @@
           </div>
           
           <div v-if="menuImageUrl" class="mb-4 relative group w-fit mx-auto md:mx-0">
-              <img :src="menuImageUrl" class="h-20 w-auto rounded-lg border border-stone-200 shadow-sm object-cover hover:scale-105 transition-all cursor-pointer" @click="window.open(menuImageUrl, '_blank')" />
+              <img :src="getApiUrl(menuImageUrl)" class="h-20 w-auto rounded-lg border border-stone-200 shadow-sm object-cover hover:scale-105 transition-all cursor-pointer" @click="window.open(getApiUrl(menuImageUrl), '_blank')" />
               <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button @click="menuImageUrl = ''" class="bg-red-500 text-white rounded-full p-1 shadow-md">
                       <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -186,6 +186,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { getApiUrl } from '../utils/api'
 
 const router = useRouter()
 const rawMenuText = ref('')

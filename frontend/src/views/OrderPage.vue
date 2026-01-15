@@ -232,6 +232,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { getApiUrl } from '../utils/api'
 
 const route = useRoute()
 const groupId = route.params.groupId
