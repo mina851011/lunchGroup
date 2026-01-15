@@ -164,7 +164,7 @@ public class GoogleSheetsRepository {
     }
 
     public void archiveOrders() throws IOException {
-        String sourceRange = "Orders!A2:J";
+        String sourceRange = "Orders!A2:K";
         List<List<Object>> allRows = readData(sourceRange);
 
         if (allRows != null && !allRows.isEmpty()) {

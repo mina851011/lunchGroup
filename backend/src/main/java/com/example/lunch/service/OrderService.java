@@ -21,7 +21,7 @@ public class OrderService {
     @Autowired
     private GoogleSheetsRepository repository;
 
-    private static final String RANGE_ORDERS = "Orders!A2:J";
+    private static final String RANGE_ORDERS = "Orders!A2:K";
 
     public Order addOrder(Order order) throws IOException {
         // Pricing Logic
@@ -94,7 +94,7 @@ public class OrderService {
         return order;
     }
 
-    private static final String RANGE_HISTORY_ORDERS = "History Orders!A2:J";
+    private static final String RANGE_HISTORY_ORDERS = "History Orders!A2:K";
 
     public List<Order> getOrdersByGroup(String groupId) throws IOException {
         List<List<Object>> liveValues = repository.readData(RANGE_ORDERS);
