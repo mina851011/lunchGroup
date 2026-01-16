@@ -51,17 +51,34 @@ public class OrderService {
             List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
             log.info("[ADD_ORDER] Read {} rows from Sheets", allRows == null ? 0 : allRows.size());
 
-            List<List<Object>> realRows = new ArrayList<>();
+            // Separate orders by group
+            List<List<Object>> currentGroupOrders = new ArrayList<>();
+            List<List<Object>> otherGroupOrders = new ArrayList<>();
+
             if (allRows != null) {
                 for (List<Object> r : allRows) {
-                    if (r.size() >= 1 && !"TOTAL".equals(r.get(0).toString())) {
-                        realRows.add(r);
+                    if (r.size() >= 2 && !"TOTAL".equals(r.get(0).toString())) {
+                        String rowGroupId = r.get(1).toString();
+                        if (rowGroupId.equals(order.getGroupId())) {
+                            currentGroupOrders.add(r);
+                        } else {
+                            otherGroupOrders.add(r);
+                        }
                     }
                 }
             }
-            log.info("[ADD_ORDER] Found {} existing real orders (excluding TOTAL)", realRows.size());
 
-            // Add new order to realRows
+            log.info("[ADD_ORDER] Current group orders: {}, Other group orders: {}",
+                    currentGroupOrders.size(), otherGroupOrders.size());
+
+            // Archive orders from other groups
+            if (!otherGroupOrders.isEmpty()) {
+                log.info("[ADD_ORDER] Archiving {} orders from other groups...", otherGroupOrders.size());
+                repository.appendData("History Orders!A:K", otherGroupOrders);
+                log.info("[ADD_ORDER] Archived old group orders to History Orders");
+            }
+
+            // Add new order to current group
             List<Object> row = new ArrayList<>();
             row.add(id);
             row.add(order.getGroupId());
@@ -74,13 +91,13 @@ public class OrderService {
             row.add(order.getNote() == null ? "" : order.getNote());
             row.add(order.getCreatedAt());
             row.add("false"); // Paid column (K)
-            realRows.add(row);
-            log.info("[ADD_ORDER] Added new order to list. Total orders now: {}", realRows.size());
+            currentGroupOrders.add(row);
+            log.info("[ADD_ORDER] Added new order. Current group total: {}", currentGroupOrders.size());
 
             // Calculate and add Total Row
             int totalSum = 0;
             int totalCount = 0;
-            for (List<Object> r : realRows) {
+            for (List<Object> r : currentGroupOrders) {
                 if (r.size() >= 8) {
                     try {
                         totalSum += Integer.parseInt(r.get(7).toString());
@@ -103,14 +120,14 @@ public class OrderService {
             totalRow.add(""); // Note column
             totalRow.add(""); // CreatedAt column
             totalRow.add(""); // Paid column
-            realRows.add(totalRow);
+            currentGroupOrders.add(totalRow);
             log.info("[ADD_ORDER] Calculated totals - Count: {}, Sum: ${}", totalCount, totalSum);
 
             log.info("[ADD_ORDER] Clearing existing data...");
             repository.clearData(RANGE_ORDERS);
 
-            log.info("[ADD_ORDER] Writing {} rows back to Sheets...", realRows.size());
-            repository.updateData(RANGE_ORDERS, realRows);
+            log.info("[ADD_ORDER] Writing {} rows back to Sheets...", currentGroupOrders.size());
+            repository.updateData(RANGE_ORDERS, currentGroupOrders);
 
             log.info("[ADD_ORDER] SUCCESS - Order {} saved for user {}", id, order.getUserName());
             return order;
