@@ -4,6 +4,7 @@ import com.example.lunch.model.Order;
 import com.example.lunch.repository.GoogleSheetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrderService {
 
@@ -24,74 +26,99 @@ public class OrderService {
     private static final String RANGE_ORDERS = "Orders!A2:K";
 
     public Order addOrder(Order order) throws IOException {
-        // Pricing Logic
-        int quantity = (order.getQuantity() == null || order.getQuantity() < 1) ? 1 : order.getQuantity();
-        order.setQuantity(quantity);
-        order.setTotalPrice(order.getBasePrice() * quantity);
+        log.info("[ADD_ORDER] Starting - User: {}, Item: {}, GroupId: {}",
+                order.getUserName(), order.getItemName(), order.getGroupId());
 
-        String id = UUID.randomUUID().toString();
-        order.setId(id);
+        try {
+            // Pricing Logic
+            int quantity = (order.getQuantity() == null || order.getQuantity() < 1) ? 1 : order.getQuantity();
+            order.setQuantity(quantity);
+            order.setTotalPrice(order.getBasePrice() * quantity);
 
-        // Use Taiwan timezone
-        ZonedDateTime nowTaipei = ZonedDateTime.now(ZoneId.of("Asia/Taipei"));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        order.setCreatedAt(nowTaipei.format(formatter));
+            String id = UUID.randomUUID().toString();
+            order.setId(id);
+            order.setPaid(false); // 新訂單預設未收款
 
-        // Full Rewrite Approach to ensure single TOTAL row and avoid intercalation
-        List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
-        List<List<Object>> realRows = new ArrayList<>();
-        if (allRows != null) {
-            for (List<Object> r : allRows) {
-                if (r.size() >= 1 && !"TOTAL".equals(r.get(0).toString())) {
-                    realRows.add(r);
+            // Use Taiwan timezone
+            ZonedDateTime nowTaipei = ZonedDateTime.now(ZoneId.of("Asia/Taipei"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            order.setCreatedAt(nowTaipei.format(formatter));
+
+            log.info("[ADD_ORDER] Order prepared - ID: {}, Total: ${}", id, order.getTotalPrice());
+
+            // Full Rewrite Approach to ensure single TOTAL row and avoid intercalation
+            log.info("[ADD_ORDER] Reading existing orders from Sheets...");
+            List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
+            log.info("[ADD_ORDER] Read {} rows from Sheets", allRows == null ? 0 : allRows.size());
+
+            List<List<Object>> realRows = new ArrayList<>();
+            if (allRows != null) {
+                for (List<Object> r : allRows) {
+                    if (r.size() >= 1 && !"TOTAL".equals(r.get(0).toString())) {
+                        realRows.add(r);
+                    }
                 }
             }
-        }
+            log.info("[ADD_ORDER] Found {} existing real orders (excluding TOTAL)", realRows.size());
 
-        // Add new order to realRows
-        List<Object> row = new ArrayList<>();
-        row.add(id);
-        row.add(order.getGroupId());
-        row.add(order.getUserName());
-        row.add(order.getItemName());
-        row.add(order.getBasePrice());
-        row.add(order.getRiceLevel());
-        row.add(order.getQuantity());
-        row.add(order.getTotalPrice());
-        row.add(order.getNote() == null ? "" : order.getNote());
-        row.add(order.getCreatedAt());
-        realRows.add(row);
+            // Add new order to realRows
+            List<Object> row = new ArrayList<>();
+            row.add(id);
+            row.add(order.getGroupId());
+            row.add(order.getUserName());
+            row.add(order.getItemName());
+            row.add(order.getBasePrice());
+            row.add(order.getRiceLevel());
+            row.add(order.getQuantity());
+            row.add(order.getTotalPrice());
+            row.add(order.getNote() == null ? "" : order.getNote());
+            row.add(order.getCreatedAt());
+            row.add("false"); // Paid column (K)
+            realRows.add(row);
+            log.info("[ADD_ORDER] Added new order to list. Total orders now: {}", realRows.size());
 
-        // Calculate and add Total Row
-        int totalSum = 0;
-        int totalCount = 0;
-        for (List<Object> r : realRows) {
-            if (r.size() >= 8) {
-                try {
-                    totalSum += Integer.parseInt(r.get(7).toString());
-                    totalCount++;
-                } catch (Exception e) {
+            // Calculate and add Total Row
+            int totalSum = 0;
+            int totalCount = 0;
+            for (List<Object> r : realRows) {
+                if (r.size() >= 8) {
+                    try {
+                        totalSum += Integer.parseInt(r.get(7).toString());
+                        totalCount++;
+                    } catch (Exception e) {
+                        log.warn("[ADD_ORDER] Failed to parse total for row: {}", r.get(0));
+                    }
                 }
             }
+
+            List<Object> totalRow = new ArrayList<>();
+            totalRow.add("TOTAL");
+            totalRow.add("");
+            totalRow.add("---");
+            totalRow.add("總計");
+            totalRow.add("");
+            totalRow.add("");
+            totalRow.add(totalCount + " 份");
+            totalRow.add(totalSum);
+            totalRow.add(""); // Note column
+            totalRow.add(""); // CreatedAt column
+            totalRow.add(""); // Paid column
+            realRows.add(totalRow);
+            log.info("[ADD_ORDER] Calculated totals - Count: {}, Sum: ${}", totalCount, totalSum);
+
+            log.info("[ADD_ORDER] Clearing existing data...");
+            repository.clearData(RANGE_ORDERS);
+
+            log.info("[ADD_ORDER] Writing {} rows back to Sheets...", realRows.size());
+            repository.updateData(RANGE_ORDERS, realRows);
+
+            log.info("[ADD_ORDER] SUCCESS - Order {} saved for user {}", id, order.getUserName());
+            return order;
+
+        } catch (Exception e) {
+            log.error("[ADD_ORDER] FAILED - User: {}, Error: {}", order.getUserName(), e.getMessage(), e);
+            throw e;
         }
-
-        List<Object> totalRow = new ArrayList<>();
-        totalRow.add("TOTAL");
-        totalRow.add("");
-        totalRow.add("---");
-        totalRow.add("總計");
-        totalRow.add("");
-        totalRow.add("");
-        totalRow.add(totalCount + " 份");
-        totalRow.add(totalSum);
-        totalRow.add(""); // Note column
-        totalRow.add(""); // CreatedAt column
-        realRows.add(totalRow);
-
-        repository.clearData(RANGE_ORDERS);
-        repository.updateData(RANGE_ORDERS, realRows);
-
-        return order;
     }
 
     private static final String RANGE_HISTORY_ORDERS = "History Orders!A2:K";
