@@ -77,7 +77,7 @@ public class OcrController {
             String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
 
             // Prepare JSON payload for Gemini
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
                     + geminiApiKey;
 
             Map<String, Object> requestBody = new HashMap<>();
