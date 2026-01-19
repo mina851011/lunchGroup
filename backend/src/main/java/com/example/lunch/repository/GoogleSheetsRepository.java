@@ -272,7 +272,7 @@ public class GoogleSheetsRepository {
         }
 
         // Real Sheets Implementation with Upsert
-        List<List<Object>> allRows = readData("Restaurants!A:D");
+        List<List<Object>> allRows = readData("Restaurants!A:E");
         int rowIndex = -1;
         if (allRows != null) {
             for (int i = 0; i < allRows.size(); i++) {
@@ -290,10 +290,11 @@ public class GoogleSheetsRepository {
         rowData.add(restaurant.getName());
         rowData.add(menuJson);
         rowData.add(restaurant.getMenuImageUrl() != null ? restaurant.getMenuImageUrl() : "");
+        rowData.add(restaurant.getNote() != null ? restaurant.getNote() : ""); // Note column (E)
 
         if (rowIndex != -1) {
             // Update existing row
-            String updateRange = "Restaurants!A" + rowIndex + ":D" + rowIndex;
+            String updateRange = "Restaurants!A" + rowIndex + ":E" + rowIndex;
             var body = new com.google.api.services.sheets.v4.model.ValueRange()
                     .setValues(Collections.singletonList(rowData));
             sheetsService.spreadsheets().values()
@@ -303,7 +304,7 @@ public class GoogleSheetsRepository {
             log.info("Updated restaurant: {} at row {}", restaurant.getName(), rowIndex);
         } else {
             // Append new row
-            appendData("Restaurants!A:D", Collections.singletonList(rowData));
+            appendData("Restaurants!A:E", Collections.singletonList(rowData));
             log.info("Appended new restaurant: {}", restaurant.getName());
         }
     }
@@ -315,8 +316,8 @@ public class GoogleSheetsRepository {
 
         List<Restaurant> results = new ArrayList<>();
         try {
-            // Read from A2:D since user confirmed headers are in the first row
-            List<List<Object>> rows = readData("Restaurants!A2:D");
+            // Read from A2:E since user confirmed headers are in the first row
+            List<List<Object>> rows = readData("Restaurants!A2:E");
             if (rows != null) {
                 for (List<Object> row : rows) {
                     if (row.size() >= 3) {
@@ -325,6 +326,7 @@ public class GoogleSheetsRepository {
                             String name = row.get(1).toString();
                             String menuJson = row.get(2).toString();
                             String menuImageUrl = row.size() >= 4 ? row.get(3).toString() : null;
+                            String note = row.size() >= 5 ? row.get(4).toString() : null;
 
                             // Skip if strictly header logic
                             if (menuJson.equalsIgnoreCase("MenuJSON") || menuJson.equalsIgnoreCase("Menu"))
@@ -332,7 +334,7 @@ public class GoogleSheetsRepository {
 
                             List<MenuItem> menu = objectMapper.readValue(menuJson, new TypeReference<List<MenuItem>>() {
                             });
-                            results.add(new Restaurant(id, name, menu, menuImageUrl));
+                            results.add(new Restaurant(id, name, menu, menuImageUrl, note));
                         } catch (Exception e) {
                             // Ignore malformed rows (e.g. headers)
                             System.err.println("Skipping invalid restaurant row: " + row + " Error: " + e.getMessage());

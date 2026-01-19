@@ -10,6 +10,7 @@ public class Restaurant {
     private String name;
     private List<MenuItem> menu;
     private String menuImageUrl;
+    private String note; // 菜單備註
 
     public Restaurant() {
     }
@@ -25,5 +26,13 @@ public class Restaurant {
         this.name = name;
         this.menu = menu;
         this.menuImageUrl = menuImageUrl;
+    }
+
+    public Restaurant(String id, String name, List<MenuItem> menu, String menuImageUrl, String note) {
+        this.id = id;
+        this.name = name;
+        this.menu = menu;
+        this.menuImageUrl = menuImageUrl;
+        this.note = note;
     }
 }

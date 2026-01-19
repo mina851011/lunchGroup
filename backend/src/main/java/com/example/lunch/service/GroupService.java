@@ -19,10 +19,10 @@ public class GroupService {
     @Autowired
     private GoogleSheetsRepository repository;
 
-    private static final String RANGE_GROUPS = "Groups!A2:F";
+    private static final String RANGE_GROUPS = "Groups!A2:G";
 
     public DiningGroup createGroup(String name, String deadline, List<com.example.lunch.model.MenuItem> menu,
-            String restaurantName, String menuImageUrl)
+            String restaurantName, String menuImageUrl, String note)
             throws IOException {
         // Archive old orders before starting a new group
         repository.archiveOrders();
@@ -31,6 +31,7 @@ public class GroupService {
         group.setMenu(menu);
         group.setRestaurantName(restaurantName);
         group.setMenuImageUrl(menuImageUrl);
+        group.setNote(note);
 
         // Use ArrayList to allow nulls, though Frontend sends default
         List<Object> row = new ArrayList<>();
@@ -40,6 +41,7 @@ public class GroupService {
         row.add(group.getCreatedAt());
         row.add(group.getRestaurantName() != null ? group.getRestaurantName() : "");
         row.add(group.getMenuImageUrl() != null ? group.getMenuImageUrl() : "");
+        row.add(group.getNote() != null ? group.getNote() : ""); // Note column (G)
 
         repository.appendData(RANGE_GROUPS, Collections.singletonList(row));
 
@@ -65,6 +67,7 @@ public class GroupService {
                         .createdAt(row.get(3).toString())
                         .restaurantName(row.size() >= 5 ? row.get(4).toString() : null)
                         .menuImageUrl(row.size() >= 6 ? row.get(5).toString() : null)
+                        .note(row.size() >= 7 ? row.get(6).toString() : null)
                         .build())
                 .collect(Collectors.toList());
     }

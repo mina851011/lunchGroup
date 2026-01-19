@@ -20,6 +20,7 @@ public class DiningGroup {
     private List<MenuItem> menu;
     private String restaurantName;
     private String menuImageUrl;
+    private String note; // 菜單備註
 
     public DiningGroup(String name, String deadline) {
         this.id = UUID.randomUUID().toString();
