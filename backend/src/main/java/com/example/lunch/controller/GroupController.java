@@ -32,6 +32,7 @@ public class GroupController {
         String restaurantName = (String) payload.get("restaurantName");
         String menuImageUrl = (String) payload.get("menuImageUrl");
         String note = (String) payload.get("note");
+        String restaurantPhone = (String) payload.get("restaurantPhone");
 
         List<MenuItem> menu = new ArrayList<>();
         if (payload.containsKey("menu")) {
@@ -44,7 +45,8 @@ public class GroupController {
                 }
             }
         }
-        return ResponseEntity.ok(groupService.createGroup(name, deadline, menu, restaurantName, menuImageUrl, note));
+        return ResponseEntity.ok(
+                groupService.createGroup(name, deadline, menu, restaurantName, menuImageUrl, note, restaurantPhone));
     }
 
     @PatchMapping("/{id}/deadline")

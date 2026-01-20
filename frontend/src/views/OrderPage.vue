@@ -30,9 +30,15 @@
           </router-link>
         </div>
         <h1 class="text-3xl font-bold text-mocha-dark">{{ group.name }}</h1>
-        <p class="text-mocha-text flex items-center justify-center gap-2">
-          <span v-if="group.restaurantName" class="font-bold text-mocha-dark bg-orange-100 px-2 py-0.5 rounded text-sm">
+        <p class="text-mocha-text flex items-center justify-center gap-2 flex-wrap">
+          <span v-if="group.restaurantName" class="font-bold text-mocha-dark bg-orange-100 px-2 py-0.5 rounded text-sm flex items-center gap-1">
              🏠 {{ group.restaurantName }}
+          </span>
+          <a v-if="group.restaurantPhone" :href="`tel:${group.restaurantPhone}`" class="font-bold text-white bg-green-500 hover:bg-green-600 px-2 py-0.5 rounded text-sm flex items-center gap-1 transition-colors">
+             📞 {{ group.restaurantPhone }}
+          </a>
+          <span v-if="group.note" class="text-stone-500 bg-stone-100 px-2 py-0.5 rounded text-sm flex items-center gap-1 border border-stone-200">
+             📝 {{ group.note }}
           </span>
           <span class="w-1 h-1 rounded-full bg-stone-300"></span>
           <span>結單：{{ formatDate(group.deadline) }}</span>

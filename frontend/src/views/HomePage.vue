@@ -143,6 +143,28 @@
                   💾 儲存店家
               </button>
           </div>
+          
+          <div class="mt-4 grid grid-cols-2 gap-4">
+              <div>
+                  <label class="block text-xs text-stone-400 mb-1">備註 (例如：週一公休)</label>
+                  <input 
+                    v-model="storeNote"
+                    class="w-full bg-stone-50 border-none rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-mocha-primary/30"
+                    placeholder="備註..."
+                  >
+              </div>
+              <div>
+                  <label class="block text-xs text-stone-400 mb-1">電話</label>
+                  <input 
+                    v-model="storePhone"
+                    class="w-full bg-stone-50 border-none rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-mocha-primary/30"
+                    placeholder="02-1234-5678"
+                  >
+              </div>
+          </div>
+          <p class="text-[10px] text-stone-400 mt-2 text-right">
+              * 備註與電話會顯示在點餐頁面
+          </p>
       </div>
       <!-- Group Creation Form -->
       <div class="space-y-6 text-left mb-6">
@@ -196,6 +218,8 @@ const simpleFileInput = ref(null)
 const ocrStatus = ref('')
 const isProcessing = ref(false)
 const menuImageUrl = ref('')
+const storeNote = ref('')
+const storePhone = ref('')
 
 // Store Management
 const restaurants = ref([])
@@ -227,10 +251,14 @@ const loadStore = () => {
         parsedMenu.value = JSON.parse(JSON.stringify(store.menu)) // Deep copy
         newStoreName.value = store.name // Auto-fill name for reference
         menuImageUrl.value = store.menuImageUrl || '' // LOAD IMAGE
+        storeNote.value = store.note || ''
+        storePhone.value = store.phone || ''
     } else {
         parsedMenu.value = []
         newStoreName.value = ''
         menuImageUrl.value = ''
+        storeNote.value = ''
+        storePhone.value = ''
     }
 }
 
@@ -241,7 +269,9 @@ const saveStore = async () => {
             id: selectedStoreId.value || null, 
             name: newStoreName.value,
             menu: parsedMenu.value,
-            menuImageUrl: menuImageUrl.value // SAVE IMAGE
+            menuImageUrl: menuImageUrl.value, // SAVE IMAGE
+            note: storeNote.value,
+            phone: storePhone.value
         })
         alert(`店家「${newStoreName.value}」儲存成功！`)
         await fetchRestaurants() // Refresh list
@@ -348,7 +378,9 @@ const createGroup = async () => {
       deadline: new Date(deadline.value).toISOString(), 
       menu: parsedMenu.value,
       restaurantName: rName || "未命名店家",
-      menuImageUrl: menuImageUrl.value
+      menuImageUrl: menuImageUrl.value,
+      note: storeNote.value,
+      restaurantPhone: storePhone.value
     }
     
     const response = await axios.post('/api/groups', payload)

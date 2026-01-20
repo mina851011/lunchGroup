@@ -11,6 +11,7 @@ public class Restaurant {
     private List<MenuItem> menu;
     private String menuImageUrl;
     private String note; // 菜單備註
+    private String phone; // 店家電話
 
     public Restaurant() {
     }
@@ -28,11 +29,12 @@ public class Restaurant {
         this.menuImageUrl = menuImageUrl;
     }
 
-    public Restaurant(String id, String name, List<MenuItem> menu, String menuImageUrl, String note) {
+    public Restaurant(String id, String name, List<MenuItem> menu, String menuImageUrl, String note, String phone) {
         this.id = id;
         this.name = name;
         this.menu = menu;
         this.menuImageUrl = menuImageUrl;
         this.note = note;
+        this.phone = phone;
     }
 }
