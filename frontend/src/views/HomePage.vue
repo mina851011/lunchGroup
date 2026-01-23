@@ -390,7 +390,8 @@ const createGroup = async () => {
     }
   } catch (err) {
     console.error("Failed to create group:", err)
-    alert("建立團購失敗")
+    const msg = err.response?.data?.message || err.response?.data?.error || "建立團購失敗"
+    alert(msg)
   }
 }
 

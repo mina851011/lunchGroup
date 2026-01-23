@@ -94,6 +94,15 @@ public class OrderService {
             currentGroupOrders.add(row);
             log.info("[ADD_ORDER] Added new order. Current group total: {}", currentGroupOrders.size());
 
+            // Added Logic: Sort by Item Name (Index 3)
+            java.text.Collator collator = java.text.Collator.getInstance(java.util.Locale.TAIWAN);
+            currentGroupOrders.sort((o1, o2) -> {
+                String item1 = o1.size() > 3 ? o1.get(3).toString() : "";
+                String item2 = o2.size() > 3 ? o2.get(3).toString() : "";
+                return collator.compare(item1, item2);
+            });
+            log.info("[ADD_ORDER] Sorted {} orders by item name", currentGroupOrders.size());
+
             // Calculate and add Total Row
             int totalSum = 0;
             int totalCount = 0;

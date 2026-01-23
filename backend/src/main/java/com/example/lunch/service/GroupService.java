@@ -24,6 +24,23 @@ public class GroupService {
     public DiningGroup createGroup(String name, String deadline, List<com.example.lunch.model.MenuItem> menu,
             String restaurantName, String menuImageUrl, String note, String restaurantPhone)
             throws IOException {
+
+        // 1. Check for active group overlap
+        List<DiningGroup> existingGroups = getAllGroups();
+        if (!existingGroups.isEmpty()) {
+            DiningGroup lastGroup = existingGroups.get(existingGroups.size() - 1);
+            try {
+                LocalDateTime deadlineTime = LocalDateTime.parse(lastGroup.getDeadline(),
+                        java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                if (LocalDateTime.now().isBefore(deadlineTime)) {
+                    throw new IOException("目前尚有未結單的團購 (" + lastGroup.getName() + ")，結單時間："
+                            + lastGroup.getDeadline().replace("T", " ") + "，請勿重複開團！");
+                }
+            } catch (Exception e) {
+                // Ignore parse errors (e.g. old data format), proceed with creation
+            }
+        }
+
         // Archive old orders before starting a new group
         repository.archiveOrders();
 
