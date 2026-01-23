@@ -6,8 +6,28 @@
         <p class="text-mocha-text opacity-80 text-sm font-medium">簡單快速的辦公室點餐系統</p>
       </div>
       
+      <!-- Active Group Warning -->
+      <div v-if="activeGroup" class="mb-8 p-4 bg-orange-50 border border-orange-200 rounded-2xl text-left animate-fade-in-up">
+          <div class="flex items-start gap-3">
+              <div class="text-2xl">🚧</div>
+              <div class="flex-1">
+                  <h3 class="font-bold text-orange-800 mb-1">目前已有進行中的團購</h3>
+                  <p class="text-sm text-orange-700 mb-3">
+                      「{{ activeGroup.name }}」正在開團中，結單時間為 {{ new Date(activeGroup.deadline).toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}。
+                      盡量不要同時開多個團以免混亂喔！
+                  </p>
+                  <button 
+                      @click="router.push(`/group/${activeGroup.id}`)"
+                      class="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
+                  >
+                      👉 前往跟團
+                  </button>
+              </div>
+          </div>
+      </div>
+
       <!-- Store Management Section -->
-      <div class="mb-8 p-4 bg-stone-50 rounded-2xl border border-stone-100 text-left">
+      <div class="mb-8 p-4 bg-stone-50 rounded-2xl border border-stone-100 text-left" :class="{'opacity-50 pointer-events-none grayscale': activeGroup}">
           <label class="block text-sm font-bold text-mocha-dark mb-3">📂 選擇常吃店家</label>
           <div class="flex gap-2 mb-4">
               <select 
@@ -71,7 +91,7 @@
       </div>
       
       <!-- Menu Editor -->
-      <div v-if="parsedMenu.length > 0" class="mb-6 text-left animate-fade-in-up">
+      <div v-if="parsedMenu.length > 0" class="mb-6 text-left animate-fade-in-up" :class="{'opacity-50 pointer-events-none grayscale': activeGroup}">
           <div class="flex justify-between items-center mb-2">
             <label class="block text-sm font-bold text-mocha-dark">📝 確認/編輯菜單 ({{ parsedMenu.length }} 項)</label>
             
@@ -167,7 +187,7 @@
           </p>
       </div>
       <!-- Group Creation Form -->
-      <div class="space-y-6 text-left mb-6">
+      <div class="space-y-6 text-left mb-6" :class="{'opacity-50 pointer-events-none grayscale': activeGroup}">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                   <label class="block text-sm font-bold text-mocha-dark mb-2">🎈 團購名稱</label>
@@ -191,10 +211,10 @@
 
       <button 
         @click="createGroup"
-        :disabled="isProcessing"
+        :disabled="isProcessing || activeGroup"
         class="w-full bg-mocha-dark text-white font-medium text-lg py-4 rounded-xl shadow-lg hover:bg-[#2C2825] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 active:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed mt-4"
       >
-        {{ isProcessing ? '處理中...' : '＋ 開啟新團購' }}
+        {{ isProcessing ? '處理中...' : (activeGroup ? '🚫 暫時無法開團' : '＋ 開啟新團購') }}
       </button>
 
       <div class="mt-8 pt-6 border-t border-stone-100">
@@ -220,6 +240,7 @@ const isProcessing = ref(false)
 const menuImageUrl = ref('')
 const storeNote = ref('')
 const storePhone = ref('')
+const activeGroup = ref(null)
 
 // Store Management
 const restaurants = ref([])
@@ -235,6 +256,21 @@ const initDefaults = () => {
     deadline.value = localISOTime;
 }
 initDefaults()
+
+const checkActiveGroup = async () => {
+    try {
+        const res = await axios.get('/api/groups')
+        if (res.data && res.data.length > 0) {
+            // Check the latest group
+            const lastGroup = res.data[res.data.length - 1]
+            if (new Date(lastGroup.deadline) > new Date()) {
+                activeGroup.value = lastGroup
+            }
+        }
+    } catch (e) {
+        console.error("Failed to check active groups", e)
+    }
+}
 
 const fetchRestaurants = async () => {
     try {
@@ -397,6 +433,7 @@ const createGroup = async () => {
 
 onMounted(() => {
     fetchRestaurants()
+    checkActiveGroup()
 })
 </script>
 
