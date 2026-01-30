@@ -73,8 +73,10 @@ public class LineNotificationScheduler {
             System.out.println("Now: " + now);
             System.out.println("Minutes until deadline: " + minutesUntilDeadline);
 
-            // 1. 檢查是否需要發送 5 分鐘提醒（剩餘時間剛好 5 分鐘）
-            if (minutesUntilDeadline == 5) {
+            // 1. 檢查是否需要發送 5 分鐘提醒
+            // 由於 ChronoUnit.MINUTES 會捨去秒數，例如 4 分 59 秒會變成 4
+            // 所以我們檢查 4 到 5 之間，確保每分鐘執行的排程器一定會抓到一次
+            if (minutesUntilDeadline >= 4 && minutesUntilDeadline <= 5) {
                 System.out.println("5-minute reminder condition met");
                 System.out.println("sentReminders contains groupId? " + sentReminders.contains(groupId));
                 System.out.println("sentReminders set: " + sentReminders);
