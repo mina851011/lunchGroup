@@ -3,6 +3,7 @@ package com.example.lunch.controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * 用於取得 LINE Group ID 的輔助 Controller
@@ -11,8 +12,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/line")
 public class LineWebhookController {
-
-import org.springframework.beans.factory.annotation.Value;
 
     /**
      * LINE Webhook endpoint
@@ -25,7 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
      * 3. 查看後端 log，找到 groupId
      */
     private static boolean hasLoggedGroupId = false;
-    
+
     @Value("${line.group.id:}")
     private String configuredGroupId;
 
