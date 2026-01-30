@@ -48,7 +48,7 @@
         載入中...
       </div>
 
-      <div class="grid md:grid-cols-[2fr_1fr] gap-6">
+      <div class="grid md:grid-cols-[3fr_2fr] gap-6">
         
         <!-- Order Form -->
         <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-100 h-fit">
