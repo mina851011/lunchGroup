@@ -12,6 +12,8 @@ import java.util.Map;
 @RequestMapping("/api/line")
 public class LineWebhookController {
 
+import org.springframework.beans.factory.annotation.Value;
+
     /**
      * LINE Webhook endpoint
      * 用於接收 LINE 平台發送的事件
@@ -23,10 +25,14 @@ public class LineWebhookController {
      * 3. 查看後端 log，找到 groupId
      */
     private static boolean hasLoggedGroupId = false;
+    
+    @Value("${line.group.id:}")
+    private String configuredGroupId;
 
     @PostMapping("/webhook")
     public String handleWebhook(@RequestBody Map<String, Object> payload) {
-        if (hasLoggedGroupId) {
+        // 如果已經設定了 Group ID，或者已經顯示過 log，就不再顯示
+        if ((configuredGroupId != null && !configuredGroupId.isEmpty()) || hasLoggedGroupId) {
             return "OK";
         }
 
