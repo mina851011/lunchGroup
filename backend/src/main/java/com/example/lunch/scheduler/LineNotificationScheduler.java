@@ -94,11 +94,11 @@ public class LineNotificationScheduler {
                 }
             }
 
-            // 2. 檢查是否需要發送結單摘要（結單時間已過，且在 5 分鐘內）
+            // 2. 檢查是否需要發送結單摘要（結單時間已過，且在 1 分鐘內）
             if (now.isAfter(deadline) || now.equals(deadline)) {
-                // 只發送最近 5 分鐘內結單的摘要，避免重新部署時重複發送舊團購
+                // 只發送最近 1 分鐘內結單的摘要，避免重新部署時重複發送舊團購
                 long minutesSinceDeadline = ChronoUnit.MINUTES.between(deadline, now);
-                if (minutesSinceDeadline <= 5) {
+                if (minutesSinceDeadline <= 1) {
                     if (!sentSummaries.contains(groupId)) {
                         List<Order> orders = orderService.getOrdersByGroup(groupId);
                         if (!orders.isEmpty()) {
@@ -116,7 +116,7 @@ public class LineNotificationScheduler {
                         System.out.println("Order summary already sent for group: " + groupId);
                     }
                 } else {
-                    System.out.println("Deadline was more than 5 minutes ago, skipping summary");
+                    System.out.println("Deadline was more than 1 minutes ago, skipping summary");
                 }
             }
 
