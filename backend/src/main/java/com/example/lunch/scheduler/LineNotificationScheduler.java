@@ -25,7 +25,7 @@ public class LineNotificationScheduler {
     @Autowired
     private OrderService orderService;
 
-    @Autowired
+    @Autowired(required = false)
     private LineNotificationService lineNotificationService;
 
     @Value("${app.url:http://localhost:5173}")
@@ -40,6 +40,11 @@ public class LineNotificationScheduler {
      */
     @Scheduled(fixedRate = 60000) // 每 60 秒執行一次
     public void checkAndSendNotifications() {
+        // 如果 LINE 服務未啟用，直接返回
+        if (lineNotificationService == null) {
+            return;
+        }
+
         try {
             List<DiningGroup> groups = groupService.getAllGroups();
             if (groups.isEmpty()) {
