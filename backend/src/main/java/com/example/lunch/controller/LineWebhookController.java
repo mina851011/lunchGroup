@@ -22,8 +22,14 @@ public class LineWebhookController {
      * 2. 在群組中發送訊息給機器人
      * 3. 查看後端 log，找到 groupId
      */
+    private static boolean hasLoggedGroupId = false;
+
     @PostMapping("/webhook")
     public String handleWebhook(@RequestBody Map<String, Object> payload) {
+        if (hasLoggedGroupId) {
+            return "OK";
+        }
+
         System.out.println("=== LINE Webhook Received ===");
         System.out.println(payload);
 
@@ -41,6 +47,7 @@ public class LineWebhookController {
                                 String groupId = source.get("groupId").toString();
                                 System.out.println(">>> GROUP ID: " + groupId);
                                 System.out.println(">>> 請將此 GROUP ID 設定到環境變數 LINE_GROUP_ID");
+                                hasLoggedGroupId = true;
                             }
                         }
                     }
