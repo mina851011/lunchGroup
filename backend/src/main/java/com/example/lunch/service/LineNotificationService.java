@@ -7,6 +7,7 @@ import com.linecorp.bot.model.message.TextMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -32,7 +33,9 @@ public class LineNotificationService {
     public void sendDeadlineReminder(String groupName, String deadline, String groupId, String appUrl) {
         try {
             ZonedDateTime deadlineTime = ZonedDateTime.parse(deadline);
-            String formattedTime = deadlineTime.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            // 轉換為台北時區顯示
+            String formattedTime = deadlineTime.withZoneSameInstant(ZoneId.of("Asia/Taipei"))
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
 
             String message = String.format(
                     "🔔 結單提醒\n" +
@@ -54,7 +57,9 @@ public class LineNotificationService {
     public void sendOrderSummary(String groupName, String deadline, List<Order> orders) {
         try {
             ZonedDateTime deadlineTime = ZonedDateTime.parse(deadline);
-            String formattedTime = deadlineTime.toLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+            // 轉換為台北時區顯示
+            String formattedTime = deadlineTime.withZoneSameInstant(ZoneId.of("Asia/Taipei"))
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
 
             String orderSummary = formatOrders(orders);
             int totalAmount = orders.stream().mapToInt(Order::getTotalPrice).sum();
@@ -107,7 +112,7 @@ public class LineNotificationService {
                     .collect(Collectors.joining(", "));
 
             sb.append(itemKey).append(" $").append(price).append("\n");
-            sb.append(userNames).append("\n\n");
+            sb.append(userNames).append("\n");
         }
 
         return sb.toString().trim();

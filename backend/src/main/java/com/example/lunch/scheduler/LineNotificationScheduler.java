@@ -89,8 +89,8 @@ public class LineNotificationScheduler {
                 }
             }
 
-            // 2. 檢查是否需要發送結單摘要（結單時間到了或已過）
-            if (minutesUntilDeadline <= 0) {
+            // 2. 檢查是否需要發送結單摘要（結單時間已過）
+            if (now.isAfter(deadline) || now.equals(deadline)) {
                 if (!sentSummaries.contains(groupId)) {
                     List<Order> orders = orderService.getOrdersByGroup(groupId);
                     if (!orders.isEmpty()) {
