@@ -73,8 +73,8 @@ public class LineNotificationScheduler {
             System.out.println("Now: " + now);
             System.out.println("Minutes until deadline: " + minutesUntilDeadline);
 
-            // 1. 檢查是否需要發送 5 分鐘提醒
-            if (minutesUntilDeadline <= 5 && minutesUntilDeadline >= 0) {
+            // 1. 檢查是否需要發送 5 分鐘提醒（剩餘時間剛好 5 分鐘）
+            if (minutesUntilDeadline == 5) {
                 if (!sentReminders.contains(groupId)) {
                     System.out.println("Sending 5-minute reminder...");
                     lineNotificationService.sendDeadlineReminder(
