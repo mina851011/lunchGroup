@@ -48,7 +48,7 @@
         載入中...
       </div>
 
-      <div class="grid md:grid-cols-2 gap-6">
+      <div class="grid md:grid-cols-[2fr_1fr] gap-6">
         
         <!-- Order Form -->
         <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-100 h-fit">
@@ -81,7 +81,7 @@
               <!-- SMART MENU GRID -->
               <div v-if="group && group.menu && group.menu.length > 0">
                   <label class="block text-sm font-medium text-mocha-text mb-2">選擇餐點</label>
-                  <div class="grid grid-cols-2 gap-3 mb-4">
+                  <div class="grid grid-cols-3 gap-3 mb-4">
                       <button
                           type="button"
                           v-for="(item, idx) in group.menu"
