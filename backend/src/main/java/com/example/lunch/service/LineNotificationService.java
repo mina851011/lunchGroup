@@ -39,7 +39,7 @@ public class LineNotificationService {
 
             String message = String.format(
                     "🔔 結單提醒\n" +
-                            "還有 5 分鐘就要結單囉！\n\n" +
+                            "還有幾分鐘就要結單囉！\n\n" +
                             "團購：%s\n" +
                             "結單時間：%s\n\n" +
                             "👉 %s/group/%s",
