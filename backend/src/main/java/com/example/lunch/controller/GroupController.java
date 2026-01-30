@@ -45,8 +45,15 @@ public class GroupController {
                 }
             }
         }
-        return ResponseEntity.ok(
-                groupService.createGroup(name, deadline, menu, restaurantName, menuImageUrl, note, restaurantPhone));
+        try {
+            return ResponseEntity.ok(
+                    groupService.createGroup(name, deadline, menu, restaurantName, menuImageUrl, note,
+                            restaurantPhone));
+        } catch (IOException e) {
+            // Return 400 Bad Request if group overlap detected
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @PatchMapping("/{id}/deadline")

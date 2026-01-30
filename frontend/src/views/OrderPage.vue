@@ -88,8 +88,8 @@
                           :key="idx"
                           @click="selectMenuItem(item)"
                           :class="[
-                              'p-3 rounded-xl border text-left transition-all relative overflow-hidden',
-                              form.itemName === item.name 
+                          'p-3 rounded-xl border text-left transition-all relative overflow-hidden',
+                              form.itemName === item.name && !isCustomItem
                                   ? 'border-mocha-primary bg-orange-50/50 shadow-md ring-1 ring-mocha-primary' 
                                   : 'border-stone-100 bg-white hover:border-mocha-primary/30'
                           ]"
@@ -105,17 +105,30 @@
                   <label class="block text-sm font-medium text-mocha-text mb-1">餐點名稱</label>
                   <input 
                     v-model="form.itemName" 
+                    @input="onItemNameInput"
                     type="text" 
                     required
-                    readonly
-                    class="w-full bg-stone-100 border-none rounded-xl px-4 py-3 text-mocha-dark cursor-not-allowed"
-                    placeholder="請從上方選擇餐點"
+                    class="w-full bg-stone-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-mocha-primary/50 text-mocha-dark placeholder-stone-300 transition-all"
+                    placeholder="請從上方選擇餐點或手動輸入"
                   >
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-mocha-text mb-1">價格</label>
-                  <div class="w-full bg-stone-100 rounded-xl px-4 py-3 text-mocha-dark text-center font-bold">
-                    ${{ form.basePrice || 0 }}
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-mocha-dark font-bold">$</span>
+                    <input
+                      v-model="form.basePrice"
+                      :readonly="!isCustomItem"
+                      type="number"
+                      required
+                      min="0"
+                      :class="[
+                        'w-full border-none rounded-xl pl-8 pr-4 py-3 text-center font-bold transition-all',
+                        isCustomItem 
+                          ? 'bg-stone-50 focus:ring-2 focus:ring-mocha-primary/50 text-mocha-dark' 
+                          : 'bg-stone-100 text-stone-500 cursor-not-allowed'
+                      ]"
+                    >
                   </div>
                 </div>
               </div>
@@ -265,6 +278,7 @@ const submitting = ref(false)
 const copied = ref(false)
 const currentTime = ref(new Date())
 const timer = ref(null)
+const isCustomItem = ref(false)
 
 const isExpired = computed(() => {
     if (!group.value || !group.value.deadline) return false
@@ -329,6 +343,11 @@ const fetchGroupData = async () => {
 const selectMenuItem = (item) => {
     form.value.itemName = item.name
     form.value.basePrice = item.price
+    isCustomItem.value = false
+}
+
+const onItemNameInput = () => {
+    isCustomItem.value = true
 }
 
 const submitOrder = async () => {

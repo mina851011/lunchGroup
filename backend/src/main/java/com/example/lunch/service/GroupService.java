@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,14 +30,27 @@ public class GroupService {
         if (!existingGroups.isEmpty()) {
             DiningGroup lastGroup = existingGroups.get(existingGroups.size() - 1);
             try {
-                LocalDateTime deadlineTime = LocalDateTime.parse(lastGroup.getDeadline(),
-                        java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                if (LocalDateTime.now().isBefore(deadlineTime)) {
-                    throw new IOException("目前尚有未結單的團購 (" + lastGroup.getName() + ")，結單時間："
-                            + lastGroup.getDeadline().replace("T", " ") + "，請勿重複開團！");
+                // Parse deadlines which might be in different formats (local vs ISO with
+                // offset)
+                // Try ZonedDateTime first (new format), fall back to LocalDateTime (old format)
+                java.time.ZonedDateTime deadlineTime;
+                try {
+                    deadlineTime = java.time.ZonedDateTime.parse(lastGroup.getDeadline());
+                } catch (java.time.format.DateTimeParseException e) {
+                    // Fallback for old data without timezone
+                    deadlineTime = java.time.LocalDateTime.parse(lastGroup.getDeadline())
+                            .atZone(java.time.ZoneId.systemDefault());
                 }
+
+                if (java.time.ZonedDateTime.now().isBefore(deadlineTime)) {
+                    throw new IOException("目前尚有未結單的團購 (" + lastGroup.getName() + ")，結單時間："
+                            + deadlineTime.toLocalDateTime().toString().replace("T", " ") + "，請勿重複開團！");
+                }
+            } catch (IOException e) {
+                throw e; // Propagate the specific business logic exception
             } catch (Exception e) {
-                // Ignore parse errors (e.g. old data format), proceed with creation
+                // Log but allow creation if parsing fails widely (safety valve)
+                System.err.println("Failed to check active group overlap: " + e.getMessage());
             }
         }
 

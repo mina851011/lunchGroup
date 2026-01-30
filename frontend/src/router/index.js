@@ -3,6 +3,7 @@ import HomePage from '../views/HomePage.vue'
 import OrderPage from '../views/OrderPage.vue'
 import GroupStats from '../views/GroupStats.vue'
 import SettlementPage from '../views/SettlementPage.vue'
+import Instructions from '../views/Instructions.vue'
 
 const routes = [
     {
@@ -24,6 +25,11 @@ const routes = [
         path: '/group/:groupId/settlement',
         name: 'Settlement',
         component: SettlementPage
+    },
+    {
+        path: '/instructions',
+        name: 'Instructions',
+        component: Instructions
     }
 ]
 

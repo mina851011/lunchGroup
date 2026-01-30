@@ -1,6 +1,12 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center border border-stone-100 transition-all duration-300">
+    <div class="w-full max-w-2xl bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center border border-stone-100 transition-all duration-300 relative">
+      <router-link 
+        to="/instructions" 
+        class="absolute top-6 right-6 text-xs bg-stone-100 text-stone-500 px-3 py-1.5 rounded-full font-bold hover:bg-stone-200 transition-colors flex items-center gap-1"
+      >
+        📖 使用說明
+      </router-link>
       <div class="mb-6">
         <h1 class="text-3xl font-bold text-mocha-dark mb-2 tracking-tight">波奇探險隊</h1>
         <p class="text-mocha-text opacity-80 text-sm font-medium">簡單快速的辦公室點餐系統</p>
