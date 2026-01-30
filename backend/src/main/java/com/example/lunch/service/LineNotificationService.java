@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@ConditionalOnProperty(name = "line.channel.access.token")
+@ConditionalOnProperty(name = { "line.channel.access.token", "line.group.id" })
 public class LineNotificationService {
 
     private final LineMessagingClient lineMessagingClient;
