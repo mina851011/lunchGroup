@@ -53,49 +53,59 @@ public class LineNotificationScheduler {
 
             // 只檢查最新的團購
             DiningGroup latestGroup = groups.get(groups.size() - 1);
-            ZonedDateTime now = ZonedDateTime.now();
             ZonedDateTime deadline;
 
             try {
                 deadline = ZonedDateTime.parse(latestGroup.getDeadline());
             } catch (Exception e) {
                 // 如果解析失敗，跳過
-                return;
-            }
-
-            // 檢查是否已過期
-            if (now.isAfter(deadline)) {
+                System.err.println("Failed to parse deadline: " + latestGroup.getDeadline());
                 return;
             }
 
             String groupId = latestGroup.getId();
+            ZonedDateTime now = ZonedDateTime.now();
+            long minutesUntilDeadline = ChronoUnit.MINUTES.between(now, deadline);
+
+            System.out.println("=== LINE Notification Check ===");
+            System.out.println("Group: " + latestGroup.getName());
+            System.out.println("Deadline: " + deadline);
+            System.out.println("Now: " + now);
+            System.out.println("Minutes until deadline: " + minutesUntilDeadline);
 
             // 1. 檢查是否需要發送 5 分鐘提醒
-            long minutesUntilDeadline = ChronoUnit.MINUTES.between(now, deadline);
             if (minutesUntilDeadline <= 5 && minutesUntilDeadline >= 0) {
                 if (!sentReminders.contains(groupId)) {
+                    System.out.println("Sending 5-minute reminder...");
                     lineNotificationService.sendDeadlineReminder(
                             latestGroup.getName(),
                             latestGroup.getDeadline(),
                             groupId,
                             appUrl);
                     sentReminders.add(groupId);
-                    System.out.println("Sent 5-minute reminder for group: " + groupId);
+                    System.out.println("✓ Sent 5-minute reminder for group: " + groupId);
+                } else {
+                    System.out.println("5-minute reminder already sent for group: " + groupId);
                 }
             }
 
-            // 2. 檢查是否需要發送結單摘要（結單時間到了）
-            if (now.isAfter(deadline) || minutesUntilDeadline == 0) {
+            // 2. 檢查是否需要發送結單摘要（結單時間到了或已過）
+            if (minutesUntilDeadline <= 0) {
                 if (!sentSummaries.contains(groupId)) {
                     List<Order> orders = orderService.getOrdersByGroup(groupId);
                     if (!orders.isEmpty()) {
+                        System.out.println("Sending order summary...");
                         lineNotificationService.sendOrderSummary(
                                 latestGroup.getName(),
                                 latestGroup.getDeadline(),
                                 orders);
                         sentSummaries.add(groupId);
-                        System.out.println("Sent order summary for group: " + groupId);
+                        System.out.println("✓ Sent order summary for group: " + groupId);
+                    } else {
+                        System.out.println("No orders to send summary for group: " + groupId);
                     }
+                } else {
+                    System.out.println("Order summary already sent for group: " + groupId);
                 }
             }
 
