@@ -100,9 +100,21 @@ public class GroupService {
                         .restaurantName(row.size() >= 5 ? row.get(4).toString() : null)
                         .menuImageUrl(row.size() >= 6 ? row.get(5).toString() : null)
                         .note(row.size() >= 7 ? row.get(6).toString() : null)
-                        .restaurantPhone(row.size() >= 8 ? row.get(7).toString() : null)
+                        .restaurantPhone(row.size() >= 8 ? formatPhoneNumber(row.get(7)) : null)
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private String formatPhoneNumber(Object phoneObj) {
+        if (phoneObj == null) {
+            return null;
+        }
+        String phone = phoneObj.toString().trim();
+        // 如果是 9 碼數字 (例如 970093839)，補上開頭的 0
+        if (phone.matches("\\d{9}")) {
+            return "0" + phone;
+        }
+        return phone;
     }
 
     public DiningGroup getGroup(String id) throws IOException {

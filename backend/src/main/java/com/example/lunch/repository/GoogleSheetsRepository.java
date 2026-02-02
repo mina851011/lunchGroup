@@ -328,7 +328,7 @@ public class GoogleSheetsRepository {
                             String menuJson = row.get(2).toString();
                             String menuImageUrl = row.size() >= 4 ? row.get(3).toString() : null;
                             String note = row.size() >= 5 ? row.get(4).toString() : null;
-                            String phone = row.size() >= 6 ? row.get(5).toString() : null;
+                            String phone = row.size() >= 6 ? formatPhoneNumber(row.get(5)) : null;
 
                             // Skip if strictly header logic
                             if (menuJson.equalsIgnoreCase("MenuJSON") || menuJson.equalsIgnoreCase("Menu"))
@@ -349,6 +349,18 @@ public class GoogleSheetsRepository {
             e.printStackTrace();
         }
         return results;
+    }
+
+    private String formatPhoneNumber(Object phoneObj) {
+        if (phoneObj == null) {
+            return null;
+        }
+        String phone = phoneObj.toString().trim();
+        // 如果是 9 碼數字 (例如 970093839)，補上開頭的 0
+        if (phone.matches("\\d{9}")) {
+            return "0" + phone;
+        }
+        return phone;
     }
 
     public void updateGroupDeadline(String groupId, String newDeadline) throws IOException {
