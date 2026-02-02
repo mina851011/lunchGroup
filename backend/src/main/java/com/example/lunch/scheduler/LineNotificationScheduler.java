@@ -64,7 +64,7 @@ public class LineNotificationScheduler {
             }
 
             String groupId = latestGroup.getId();
-            ZonedDateTime now = ZonedDateTime.now();
+            ZonedDateTime now = ZonedDateTime.now(java.time.ZoneId.of("Asia/Taipei"));
             long minutesUntilDeadline = ChronoUnit.MINUTES.between(now, deadline);
 
             System.out.println("=== LINE Notification Check ===");
