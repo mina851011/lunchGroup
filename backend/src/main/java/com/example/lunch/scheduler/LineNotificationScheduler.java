@@ -109,6 +109,13 @@ public class LineNotificationScheduler {
                                     orders);
                             sentSummaries.add(groupId);
                             System.out.println("✓ Sent order summary for group: " + groupId);
+
+                            // 發送統計訊息
+                            System.out.println("Sending order statistics...");
+                            lineNotificationService.sendOrderStatistics(
+                                    latestGroup.getRestaurantPhone(),
+                                    orders);
+                            System.out.println("✓ Sent order statistics for group: " + groupId);
                         } else {
                             System.out.println("No orders to send summary for group: " + groupId);
                         }

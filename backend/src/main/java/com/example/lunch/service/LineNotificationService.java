@@ -78,6 +78,42 @@ public class LineNotificationService {
     }
 
     /**
+     * 發送訂單統計與店家資訊
+     */
+    public void sendOrderStatistics(String restaurantPhone, List<Order> orders) {
+        try {
+            // 統計各品項數量
+            Map<String, Long> stats = orders.stream()
+                    .collect(Collectors.groupingBy(order -> {
+                        String riceLabel = getRiceLabel(order.getRiceLevel());
+                        if (riceLabel.isEmpty()) {
+                            return order.getItemName();
+                        }
+                        return order.getItemName() + " " + riceLabel;
+                    }, Collectors.counting()));
+
+            StringBuilder sb = new StringBuilder();
+
+            // 1. 店家電話 (如果有)
+            if (restaurantPhone != null && !restaurantPhone.trim().isEmpty()) {
+                sb.append("店家電話：").append(restaurantPhone).append("\n");
+            }
+
+            // 2. 統計清單
+            stats.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        sb.append(entry.getKey()).append("*").append(entry.getValue()).append("\n");
+                    });
+
+            sendMessage(sb.toString().trim());
+            System.out.println("Line statistics message sent successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to send order statistics: " + e.getMessage());
+        }
+    }
+
+    /**
      * 格式化訂單：依品項+飯量分組
      * 格式：
      * 五香雞腿 飯少 $115
