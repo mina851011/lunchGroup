@@ -82,15 +82,9 @@ public class LineNotificationService {
      */
     public void sendOrderStatistics(String restaurantPhone, List<Order> orders) {
         try {
-            // 統計各品項數量
+            // 統計各品項數量 (包含品項、飯量、備註)
             Map<String, Long> stats = orders.stream()
-                    .collect(Collectors.groupingBy(order -> {
-                        String riceLabel = getRiceLabel(order.getRiceLevel());
-                        if (riceLabel.isEmpty()) {
-                            return order.getItemName();
-                        }
-                        return order.getItemName() + " " + riceLabel;
-                    }, Collectors.counting()));
+                    .collect(Collectors.groupingBy(this::getGroupingKey, Collectors.counting()));
 
             StringBuilder sb = new StringBuilder();
 
@@ -123,15 +117,9 @@ public class LineNotificationService {
      * Renee, 小婕
      */
     private String formatOrders(List<Order> orders) {
-        // 建立分組 key: "品項名稱 + 飯量"
+        // 建立分組 key: "品項名稱 + 飯量 + 備註"
         Map<String, List<Order>> groupedOrders = orders.stream()
-                .collect(Collectors.groupingBy(order -> {
-                    String riceLabel = getRiceLabel(order.getRiceLevel());
-                    if (riceLabel.isEmpty()) {
-                        return order.getItemName();
-                    }
-                    return order.getItemName() + " " + riceLabel;
-                }));
+                .collect(Collectors.groupingBy(this::getGroupingKey));
 
         StringBuilder sb = new StringBuilder();
 
@@ -139,7 +127,7 @@ public class LineNotificationService {
             String itemKey = entry.getKey();
             List<Order> itemOrders = entry.getValue();
 
-            // 取第一筆訂單的價格（同品項+飯量價格應該相同）
+            // 取第一筆訂單的價格 (同品項組價格相同)
             int price = itemOrders.get(0).getBasePrice();
 
             // 收集所有人名
@@ -147,11 +135,28 @@ public class LineNotificationService {
                     .map(Order::getUserName)
                     .collect(Collectors.joining(", "));
 
-            sb.append(itemKey).append(" $").append(price).append("\n");
-            sb.append(userNames).append("\n");
+            // 格式：[品項 飯量 備註] $價格 人名, 人名
+            sb.append(itemKey).append(" $").append(price).append(" ").append(userNames).append("\n");
         }
 
         return sb.toString().trim();
+    }
+
+    /**
+     * 取得分組 Key (品項 + 飯量 + 備註)
+     */
+    private String getGroupingKey(Order order) {
+        String riceLabel = getRiceLabel(order.getRiceLevel());
+        String note = order.getNote() != null ? order.getNote().trim() : "";
+
+        StringBuilder sb = new StringBuilder(order.getItemName());
+        if (!riceLabel.isEmpty()) {
+            sb.append(" ").append(riceLabel);
+        }
+        if (!note.isEmpty()) {
+            sb.append(" ").append(note);
+        }
+        return sb.toString();
     }
 
     /**
