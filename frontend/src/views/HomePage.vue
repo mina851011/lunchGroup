@@ -7,7 +7,8 @@
       >
         📖 使用說明
       </router-link>
-      <div class="mb-6">
+      <div class="mb-6 flex flex-col items-center justify-center">
+        <img src="/logo.png" class="w-16 h-16 mb-2 drop-shadow-sm" alt="Logo" />
         <h1 class="text-3xl font-bold text-mocha-dark mb-2 tracking-tight">波奇探險隊</h1>
         <p class="text-mocha-text opacity-80 text-sm font-medium">簡單快速的辦公室點餐系統</p>
       </div>
