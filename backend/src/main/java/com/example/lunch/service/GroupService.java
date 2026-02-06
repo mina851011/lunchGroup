@@ -3,6 +3,7 @@ package com.example.lunch.service;
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.repository.GoogleSheetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -134,6 +135,7 @@ public class GroupService {
     }
 
     @Autowired(required = false)
+    @Lazy
     private com.example.lunch.scheduler.LineNotificationScheduler notificationScheduler;
 
     public void quietCloseGroup(String groupId, String newDeadline) throws IOException {
