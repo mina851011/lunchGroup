@@ -69,6 +69,22 @@ public class GroupController {
         }
     }
 
+    @PatchMapping("/{id}/quiet-close")
+    public ResponseEntity<?> quietClose(@PathVariable String id, @RequestBody Map<String, String> payload) {
+        try {
+            String newDeadline = payload.get("deadline");
+            if (newDeadline == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing deadline"));
+            }
+            groupService.quietCloseGroup(id, newDeadline);
+            return ResponseEntity.ok(Map.of("message", "Group closed quietly"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to quiet close: " + e.getMessage()));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<DiningGroup>> getHistory() throws IOException {
         return ResponseEntity.ok(groupService.getAllGroups());

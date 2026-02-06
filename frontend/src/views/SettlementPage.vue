@@ -4,8 +4,22 @@
       
       <!-- Header -->
       <header v-if="group" class="text-center space-y-2 mb-8">
-        <div class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold inline-block">
+        <div v-if="isExpired" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold inline-block">
           ✅ 已結單
+        </div>
+        <div class="flex gap-2 justify-center" v-else>
+          <button 
+            @click="closeOrder"
+            class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-xs font-bold hover:bg-red-200 transition-colors inline-flex items-center gap-1"
+          >
+            🛑 立即結單 (發送通知)
+          </button>
+          <button 
+            @click="quietClose"
+            class="px-4 py-1.5 bg-stone-100 text-stone-600 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors inline-flex items-center gap-1"
+          >
+            ❌ 關團 (不通知)
+          </button>
         </div>
         <h1 class="text-2xl font-bold text-mocha-dark">{{ group.name }}</h1>
         <p class="text-sm text-stone-500">結算明細</p>
@@ -85,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 
@@ -99,7 +113,18 @@ const loading = ref(true)
 const totalAmount = computed(() => orders.value.reduce((sum, o) => sum + (o.totalPrice || 0), 0))
 const paidAmount = computed(() => orders.value.filter(o => o.paid).reduce((sum, o) => sum + (o.totalPrice || 0), 0))
 const unpaidAmount = computed(() => totalAmount.value - paidAmount.value)
+
 const paidCount = computed(() => orders.value.filter(o => o.paid).length)
+
+const currentTime = ref(new Date())
+const timer = ref(null)
+
+const isExpired = computed(() => {
+    if (!group.value || !group.value.deadline) return false
+    // Handle both ISO 'T' and space separated
+    const deadlineStr = group.value.deadline.replace(' ', 'T')
+    return currentTime.value > new Date(deadlineStr)
+})
 
 const fetchData = async () => {
     try {
@@ -125,5 +150,51 @@ const togglePaid = async (order) => {
     }
 }
 
-onMounted(fetchData)
+const closeOrder = async () => {
+    if (!confirm('確定要立即結單嗎？這會發送 LINE 通知。')) return
+    
+    try {
+        const deadlineStr = getLocalDeadlineStr()
+        await axios.patch(`/api/groups/${groupId}/deadline`, { deadline: deadlineStr })
+        await fetchData()
+    } catch (err) {
+        console.error("Close order error", err)
+        alert('結單失敗')
+    }
+}
+
+const quietClose = async () => {
+    if (!confirm('確定要關團嗎？這【不會】發送 LINE 通知。')) return
+    
+    try {
+        const deadlineStr = getLocalDeadlineStr()
+        await axios.patch(`/api/groups/${groupId}/quiet-close`, { deadline: deadlineStr })
+        await fetchData()
+    } catch (err) {
+        console.error("Quiet close error", err)
+        alert('關團失敗')
+    }
+}
+
+const getLocalDeadlineStr = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hour = String(now.getHours()).padStart(2, '0')
+    const minute = String(now.getMinutes()).padStart(2, '0')
+    const second = String(now.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hour}:${minute}:${second}`
+}
+
+onMounted(() => {
+    fetchData()
+    timer.value = setInterval(() => {
+        currentTime.value = new Date()
+    }, 1000)
+})
+
+onUnmounted(() => {
+    if (timer.value) clearInterval(timer.value)
+})
 </script>

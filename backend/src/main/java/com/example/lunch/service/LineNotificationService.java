@@ -28,11 +28,31 @@ public class LineNotificationService {
     }
 
     /**
+     * Helper to parse deadline string which might be ISO Zoned or Local
+     */
+    private ZonedDateTime parseDeadline(String deadline) {
+        try {
+            return ZonedDateTime.parse(deadline);
+        } catch (Exception e) {
+            // Fallback: Assume it's a local ISO format (e.g. from datetime-local input) and
+            // treat as Taipei time
+            try {
+                return java.time.LocalDateTime.parse(deadline).atZone(ZoneId.of("Asia/Taipei"));
+            } catch (Exception e2) {
+                // Last resort, try appending current date if it's just time? No, assume format
+                // is always full date time
+                System.err.println("Failed to parse deadline: " + deadline);
+                throw e2; // Rethrow to be caught by caller
+            }
+        }
+    }
+
+    /**
      * 發送結單前 5 分鐘提醒
      */
     public void sendDeadlineReminder(String groupName, String deadline, String groupId, String appUrl) {
         try {
-            ZonedDateTime deadlineTime = ZonedDateTime.parse(deadline);
+            ZonedDateTime deadlineTime = parseDeadline(deadline);
             // 轉換為台北時區顯示
             String formattedTime = deadlineTime.withZoneSameInstant(ZoneId.of("Asia/Taipei"))
                     .format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -56,7 +76,7 @@ public class LineNotificationService {
      */
     public void sendOrderSummary(String groupName, String deadline, List<Order> orders) {
         try {
-            ZonedDateTime deadlineTime = ZonedDateTime.parse(deadline);
+            ZonedDateTime deadlineTime = parseDeadline(deadline);
             // 轉換為台北時區顯示
             String formattedTime = deadlineTime.withZoneSameInstant(ZoneId.of("Asia/Taipei"))
                     .format(DateTimeFormatter.ofPattern("HH:mm"));

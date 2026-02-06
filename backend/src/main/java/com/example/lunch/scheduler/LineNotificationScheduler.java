@@ -58,12 +58,18 @@ public class LineNotificationScheduler {
             try {
                 deadline = ZonedDateTime.parse(latestGroup.getDeadline());
             } catch (Exception e) {
-                // 如果解析失敗，跳過
-                System.err.println("Failed to parse deadline: " + latestGroup.getDeadline());
-                return;
+                try {
+                    deadline = java.time.LocalDateTime.parse(latestGroup.getDeadline())
+                            .atZone(java.time.ZoneId.of("Asia/Taipei"));
+                } catch (Exception e2) {
+                    // 如果解析失敗，跳過
+                    System.err.println("Failed to parse deadline: " + latestGroup.getDeadline());
+                    return;
+                }
             }
 
             String groupId = latestGroup.getId();
+
             ZonedDateTime now = ZonedDateTime.now(java.time.ZoneId.of("Asia/Taipei"));
             long minutesUntilDeadline = ChronoUnit.MINUTES.between(now, deadline);
 
@@ -139,5 +145,13 @@ public class LineNotificationScheduler {
             System.err.println("Error in notification scheduler: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 手動標記群組已發送摘要（用於靜默結單）
+     */
+    public void markGroupAsSummarySent(String groupId) {
+        sentSummaries.add(groupId);
+        System.out.println("Manually marked group as summary sent: " + groupId);
     }
 }

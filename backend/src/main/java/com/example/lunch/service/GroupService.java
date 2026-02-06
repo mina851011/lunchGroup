@@ -39,7 +39,7 @@ public class GroupService {
                 } catch (java.time.format.DateTimeParseException e) {
                     // Fallback for old data without timezone
                     deadlineTime = java.time.LocalDateTime.parse(lastGroup.getDeadline())
-                            .atZone(java.time.ZoneId.systemDefault());
+                            .atZone(java.time.ZoneId.of("Asia/Taipei"));
                 }
 
                 if (java.time.ZonedDateTime.now().isBefore(deadlineTime)) {
@@ -131,5 +131,17 @@ public class GroupService {
 
     public void updateDeadline(String groupId, String newDeadline) throws IOException {
         repository.updateGroupDeadline(groupId, newDeadline);
+    }
+
+    @Autowired(required = false)
+    private com.example.lunch.scheduler.LineNotificationScheduler notificationScheduler;
+
+    public void quietCloseGroup(String groupId, String newDeadline) throws IOException {
+        // Mark as sent in scheduler to prevent notification
+        if (notificationScheduler != null) {
+            notificationScheduler.markGroupAsSummarySent(groupId);
+        }
+        // Then update deadline (scheduler will see it as expired but already sent)
+        updateDeadline(groupId, newDeadline);
     }
 }

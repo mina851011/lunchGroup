@@ -27,6 +27,7 @@ public class DiningGroup {
         this.id = UUID.randomUUID().toString();
         this.name = name;
         this.deadline = deadline;
-        this.createdAt = java.time.LocalDateTime.now().toString();
+        this.createdAt = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Taipei"))
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

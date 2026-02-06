@@ -408,8 +408,15 @@ const extendDeadline = async () => {
             return
         }
 
-        const isoDeadline = dateObj.toISOString()
-        await axios.patch(`/api/groups/${groupId}/deadline`, { deadline: isoDeadline })
+        const year = dateObj.getFullYear()
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+        const day = String(dateObj.getDate()).padStart(2, '0')
+        const hour = String(dateObj.getHours()).padStart(2, '0')
+        const minute = String(dateObj.getMinutes()).padStart(2, '0')
+        const second = String(dateObj.getSeconds()).padStart(2, '0')
+        const localDeadline = `${year}-${month}-${day}T${hour}:${minute}:${second}`
+
+        await axios.patch(`/api/groups/${groupId}/deadline`, { deadline: localDeadline })
         alert("結單時間已延長！大家可以繼續點餐了。")
         await fetchGroupData()
     } catch (err) {
