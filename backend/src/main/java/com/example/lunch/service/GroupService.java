@@ -3,6 +3,8 @@ package com.example.lunch.service;
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.repository.GoogleSheetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ public class GroupService {
 
     private static final String RANGE_GROUPS = "Groups!A2:H";
 
+    @CacheEvict(value = "groups", allEntries = true)
     public DiningGroup createGroup(String name, String deadline, List<com.example.lunch.model.MenuItem> menu,
             String restaurantName, String menuImageUrl, String note, String restaurantPhone)
             throws IOException {
@@ -85,6 +88,7 @@ public class GroupService {
         return group;
     }
 
+    @Cacheable(value = "groups", unless = "#result.isEmpty()")
     public List<DiningGroup> getAllGroups() throws IOException {
         List<List<Object>> values = repository.readData(RANGE_GROUPS);
         if (values == null || values.isEmpty()) {
@@ -130,6 +134,7 @@ public class GroupService {
         return group;
     }
 
+    @CacheEvict(value = "groups", allEntries = true)
     public void updateDeadline(String groupId, String newDeadline) throws IOException {
         repository.updateGroupDeadline(groupId, newDeadline);
     }
@@ -138,6 +143,7 @@ public class GroupService {
     @Lazy
     private com.example.lunch.scheduler.LineNotificationScheduler notificationScheduler;
 
+    @CacheEvict(value = "groups", allEntries = true)
     public void quietCloseGroup(String groupId, String newDeadline) throws IOException {
         // Mark as sent in scheduler to prevent notification
         if (notificationScheduler != null) {
