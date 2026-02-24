@@ -12,6 +12,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.linecorp.bot.model.message.Message;
 
 @Service
 @ConditionalOnProperty(name = { "line.channel.access.token", "line.group.id" })
@@ -72,58 +73,48 @@ public class LineNotificationService {
     }
 
     /**
-     * 發送結單訂單摘要
+     * 發送結單訂單摘要與統計（合併在一個 Request 發送，節省額度）
      */
-    public void sendOrderSummary(String groupName, String deadline, List<Order> orders) {
+    public void sendOrderSummaryAndStatistics(String groupName, String deadline, String restaurantPhone,
+            List<Order> orders) {
         try {
             ZonedDateTime deadlineTime = parseDeadline(deadline);
-            // 轉換為台北時區顯示
             String formattedTime = deadlineTime.withZoneSameInstant(ZoneId.of("Asia/Taipei"))
                     .format(DateTimeFormatter.ofPattern("HH:mm"));
 
             String orderSummary = formatOrders(orders);
             int totalAmount = orders.stream().mapToInt(Order::getTotalPrice).sum();
 
-            String message = String.format(
+            String summaryMessage = String.format(
                     "📋 訂單摘要\n" +
                             "%s 結單\n\n" +
                             "%s\n" +
                             "總金額：$%d",
                     formattedTime, orderSummary, totalAmount);
 
-            sendMessage(message);
-        } catch (Exception e) {
-            System.err.println("Failed to send order summary: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 發送訂單統計與店家資訊
-     */
-    public void sendOrderStatistics(String restaurantPhone, List<Order> orders) {
-        try {
-            // 統計各品項數量 (包含品項、飯量、備註)
+            // 統計訊息
             Map<String, Long> stats = orders.stream()
-                    .collect(Collectors.groupingBy(this::getGroupingKey, Collectors.counting()));
+                    .collect(Collectors.groupingBy(
+                            this::getGroupingKey,
+                            Collectors.summingLong(o -> o.getQuantity() != null ? o.getQuantity() : 1L)));
 
             StringBuilder sb = new StringBuilder();
-
-            // 1. 店家電話 (如果有)
             if (restaurantPhone != null && !restaurantPhone.trim().isEmpty()) {
                 sb.append("店家電話：").append(restaurantPhone).append("\n");
             }
 
-            // 2. 統計清單
             stats.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(entry -> {
                         sb.append(entry.getKey()).append("*").append(entry.getValue()).append("\n");
                     });
 
-            sendMessage(sb.toString().trim());
-            System.out.println("Line statistics message sent successfully");
+            String statsMessage = sb.toString().trim();
+
+            String combinedMessage = summaryMessage + "\n\n" + statsMessage;
+            sendMessage(combinedMessage); // 兩個訊息合併在一個氣泡發出，只扣 1 倍額度
         } catch (Exception e) {
-            System.err.println("Failed to send order statistics: " + e.getMessage());
+            System.err.println("Failed to send order summary and statistics: " + e.getMessage());
         }
     }
 
@@ -150,9 +141,16 @@ public class LineNotificationService {
             // 取第一筆訂單的價格 (同品項組價格相同)
             int price = itemOrders.get(0).getBasePrice();
 
-            // 收集所有人名
-            String userNames = itemOrders.stream()
-                    .map(Order::getUserName)
+            // 收集並加總相同人名的數量
+            Map<String, Integer> userQtyMap = new LinkedHashMap<>();
+            for (Order order : itemOrders) {
+                int qty = order.getQuantity() != null ? order.getQuantity() : 1;
+                userQtyMap.merge(order.getUserName(), qty, Integer::sum);
+            }
+
+            // 格式化人名
+            String userNames = userQtyMap.entrySet().stream()
+                    .map(e -> e.getValue() > 1 ? e.getKey() + "*" + e.getValue() : e.getKey())
                     .collect(Collectors.joining(", "));
 
             // 格式：[品項 飯量 備註] $價格 人名, 人名
@@ -197,13 +195,25 @@ public class LineNotificationService {
     }
 
     /**
-     * 發送訊息到 LINE 群組
+     * 發送訊息到 LINE 群組 (單一文字泡泡)
      */
     private void sendMessage(String message) {
+        sendMessages(message);
+    }
+
+    /**
+     * 發送多個訊息到 LINE 群組 (一次 Request 最多 5 個泡泡)
+     * 這可以大幅減少 Push API 扣除的群組訊息額度
+     */
+    private void sendMessages(String... messages) {
         try {
-            PushMessage pushMessage = new PushMessage(groupId, new TextMessage(message));
+            List<Message> lineMessages = Arrays.stream(messages)
+                    .map(TextMessage::new)
+                    .collect(Collectors.toList());
+
+            PushMessage pushMessage = new PushMessage(groupId, lineMessages);
             lineMessagingClient.pushMessage(pushMessage).get();
-            System.out.println("LINE message sent successfully");
+            System.out.println("LINE message(s) sent successfully, count: " + messages.length);
         } catch (Exception e) {
             System.err.println("Failed to send LINE message: " + e.getMessage());
             e.printStackTrace();

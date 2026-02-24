@@ -79,26 +79,7 @@ public class LineNotificationScheduler {
             System.out.println("Now: " + now);
             System.out.println("Minutes until deadline: " + minutesUntilDeadline);
 
-            // 1. 檢查是否需要發送 5 分鐘提醒
-            // 由於 ChronoUnit.MINUTES 會捨去秒數，例如 4 分 59 秒會變成 4
-            // 所以我們檢查 4 到 5 之間，確保每分鐘執行的排程器一定會抓到一次
-            if (minutesUntilDeadline >= 4 && minutesUntilDeadline <= 5) {
-                System.out.println("5-minute reminder condition met");
-                System.out.println("sentReminders contains groupId? " + sentReminders.contains(groupId));
-                System.out.println("sentReminders set: " + sentReminders);
-                if (!sentReminders.contains(groupId)) {
-                    System.out.println("Sending 5-minute reminder...");
-                    lineNotificationService.sendDeadlineReminder(
-                            latestGroup.getName(),
-                            latestGroup.getDeadline(),
-                            groupId,
-                            appUrl);
-                    sentReminders.add(groupId);
-                    System.out.println("✓ Sent 5-minute reminder for group: " + groupId);
-                } else {
-                    System.out.println("5-minute reminder already sent for group: " + groupId);
-                }
-            }
+            // 1. (已移除 5 分鐘前結單提醒以節省額度)
 
             // 2. 檢查是否需要發送結單摘要（結單時間已過，且在 1 分鐘內）
             if (now.isAfter(deadline) || now.equals(deadline)) {
@@ -108,20 +89,14 @@ public class LineNotificationScheduler {
                     if (!sentSummaries.contains(groupId)) {
                         List<Order> orders = orderService.getOrdersByGroup(groupId);
                         if (!orders.isEmpty()) {
-                            System.out.println("Sending order summary...");
-                            lineNotificationService.sendOrderSummary(
+                            System.out.println("Sending order summary and statistics...");
+                            lineNotificationService.sendOrderSummaryAndStatistics(
                                     latestGroup.getName(),
                                     latestGroup.getDeadline(),
-                                    orders);
-                            sentSummaries.add(groupId);
-                            System.out.println("✓ Sent order summary for group: " + groupId);
-
-                            // 發送統計訊息
-                            System.out.println("Sending order statistics...");
-                            lineNotificationService.sendOrderStatistics(
                                     latestGroup.getRestaurantPhone(),
                                     orders);
-                            System.out.println("✓ Sent order statistics for group: " + groupId);
+                            sentSummaries.add(groupId);
+                            System.out.println("✓ Sent order summary and statistics for group: " + groupId);
                         } else {
                             System.out.println("No orders to send summary for group: " + groupId);
                         }
