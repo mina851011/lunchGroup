@@ -248,25 +248,23 @@ public class OrderService {
             return false;
         }
 
-        boolean found = false;
-        for (List<Object> row : allRows) {
+        int rowIndex = -1;
+        for (int i = 0; i < allRows.size(); i++) {
+            List<Object> row = allRows.get(i);
             if (row.size() >= 2 && row.get(0).toString().equals(orderId)
                     && row.get(1).toString().equals(groupId)) {
-                // Ensure row has 11 columns
-                while (row.size() < 11) {
-                    row.add("");
-                }
-                row.set(10, paid ? "true" : "false");
-                found = true;
+                rowIndex = i + 2; // RANGE_ORDERS starts at A2, so index 0 is row 2
                 break;
             }
         }
 
-        if (found) {
-            repository.clearData(RANGE_ORDERS);
-            repository.updateData(RANGE_ORDERS, allRows);
+        if (rowIndex != -1) {
+            String updateRange = "Orders!K" + rowIndex;
+            repository.updateData(updateRange,
+                    Collections.singletonList(Collections.singletonList(paid ? "true" : "false")));
+            return true;
         }
 
-        return found;
+        return false;
     }
 }
