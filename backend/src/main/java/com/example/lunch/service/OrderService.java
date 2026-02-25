@@ -244,22 +244,41 @@ public class OrderService {
 
     public boolean updatePaymentStatus(String groupId, String orderId, boolean paid) throws IOException {
         List<List<Object>> allRows = repository.readData(RANGE_ORDERS);
-        if (allRows == null || allRows.isEmpty()) {
-            return false;
-        }
-
         int rowIndex = -1;
-        for (int i = 0; i < allRows.size(); i++) {
-            List<Object> row = allRows.get(i);
-            if (row.size() >= 2 && row.get(0).toString().equals(orderId)
-                    && row.get(1).toString().equals(groupId)) {
-                rowIndex = i + 2; // RANGE_ORDERS starts at A2, so index 0 is row 2
-                break;
+        if (allRows != null && !allRows.isEmpty()) {
+            for (int i = 0; i < allRows.size(); i++) {
+                List<Object> row = allRows.get(i);
+                if (row.size() >= 2 && row.get(0).toString().equals(orderId)
+                        && row.get(1).toString().equals(groupId)) {
+                    rowIndex = i + 2; // RANGE_ORDERS starts at A2, so index 0 is row 2
+                    break;
+                }
             }
         }
 
         if (rowIndex != -1) {
             String updateRange = "Orders!K" + rowIndex;
+            repository.updateData(updateRange,
+                    Collections.singletonList(Collections.singletonList(paid ? "true" : "false")));
+            return true;
+        }
+
+        // Try finding in history orders
+        List<List<Object>> historyRows = repository.readData(RANGE_HISTORY_ORDERS);
+        int historyRowIndex = -1;
+        if (historyRows != null && !historyRows.isEmpty()) {
+            for (int i = 0; i < historyRows.size(); i++) {
+                List<Object> row = historyRows.get(i);
+                if (row.size() >= 2 && row.get(0).toString().equals(orderId)
+                        && row.get(1).toString().equals(groupId)) {
+                    historyRowIndex = i + 2; // RANGE_HISTORY_ORDERS starts at A2
+                    break;
+                }
+            }
+        }
+
+        if (historyRowIndex != -1) {
+            String updateRange = "History Orders!K" + historyRowIndex;
             repository.updateData(updateRange,
                     Collections.singletonList(Collections.singletonList(paid ? "true" : "false")));
             return true;
