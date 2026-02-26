@@ -74,6 +74,12 @@
                 <div class="text-sm text-stone-500">
                   {{ order.itemName }} 
                   <span class="text-xs text-stone-400">x{{ order.quantity }}</span>
+                  <span v-if="order.riceLevel && order.riceLevel !== 'FULL'" class="text-[10px] border border-orange-200 text-orange-500 px-1.5 py-0.5 rounded-full font-bold ml-1 inline-block align-middle mb-0.5">
+                    {{ getRiceLabel(order.riceLevel) }}
+                  </span>
+                </div>
+                <div v-if="order.note" class="text-xs text-stone-400 mt-0.5 border-l-2 border-stone-200 pl-1.5 py-0.5">
+                  {{ order.note }}
                 </div>
               </div>
             </div>
@@ -102,6 +108,17 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+
+const riceOptions = [
+  { label: '正常', value: 'FULL' },
+  { label: '半', value: 'HALF' },
+  { label: '少', value: 'LESS' }
+]
+
+const getRiceLabel = (val) => {
+    const opt = riceOptions.find(o => o.value === val)
+    return opt ? opt.label : val
+}
 
 const route = useRoute()
 const groupId = route.params.groupId
