@@ -1,5 +1,6 @@
 package com.example.lunch.service;
 
+import com.example.lunch.config.RegionContext;
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.repository.GoogleSheetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class GroupService {
     @Autowired
     private GoogleSheetsRepository repository;
 
-    private static final String RANGE_GROUPS = "Groups!A2:H";
+    private static final String RANGE_GROUPS = "Groups!A2:I";
 
     @CacheEvict(value = "groups", allEntries = true)
     public DiningGroup createGroup(String name, String deadline, List<com.example.lunch.model.MenuItem> menu,
@@ -67,6 +68,7 @@ public class GroupService {
         group.setMenuImageUrl(menuImageUrl);
         group.setNote(note);
         group.setRestaurantPhone(restaurantPhone);
+        group.setRegion(RegionContext.get());
 
         // Use ArrayList to allow nulls, though Frontend sends default
         List<Object> row = new ArrayList<>();
@@ -78,6 +80,7 @@ public class GroupService {
         row.add(group.getMenuImageUrl() != null ? group.getMenuImageUrl() : "");
         row.add(group.getNote() != null ? group.getNote() : ""); // Note column (G)
         row.add(group.getRestaurantPhone() != null ? group.getRestaurantPhone() : ""); // Phone column (H)
+        row.add(group.getRegion() != null ? group.getRegion() : "taichung"); // Region column (I)
 
         repository.appendData(RANGE_GROUPS, Collections.singletonList(row));
 
@@ -106,6 +109,7 @@ public class GroupService {
                         .menuImageUrl(row.size() >= 6 ? row.get(5).toString() : null)
                         .note(row.size() >= 7 ? row.get(6).toString() : null)
                         .restaurantPhone(row.size() >= 8 ? formatPhoneNumber(row.get(7)) : null)
+                        .region(row.size() >= 9 ? row.get(8).toString() : "taichung")
                         .build())
                 .collect(Collectors.toList());
     }

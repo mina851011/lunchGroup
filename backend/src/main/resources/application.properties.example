@@ -4,11 +4,17 @@ google.sheets.application-name=LunchOrderingSystem
 # Credentials path (Local Dev)
 google.sheets.credentials-path=src/main/resources/credentials.json
 # Credentials JSON (Cloud Deployment, paste raw JSON content here or set via ENV)
-# google.sheets.credentials-json=${GOOGLE_CREDENTIALS_JSON:}
-google.sheets.spreadsheet-id=YOUR_SPREADSHEET_ID_HERE
+google.sheets.credentials-json=${GOOGLE_SHEETS_CREDENTIALS_JSON:${GOOGLE_CREDENTIALS_JSON:}}
+google.sheets.spreadsheet-id-taichung=${SPREADSHEET_ID_TAICHUNG:${GOOGLE_SHEETS_SPREADSHEET_ID_TAICHUNG:}}
+google.sheets.spreadsheet-id-taipei=${SPREADSHEET_ID_TAIPEI:${GOOGLE_SHEETS_SPREADSHEET_ID_TAIPEI:}}
 
 # Gemini API Configuration
 gemini.api.key=YOUR_GEMINI_API_KEY_HERE
 
 # Server Port
 server.port=8080
+
+# Data retention for Google Sheets
+data.retention.enabled=${DATA_RETENTION_ENABLED:true}
+data.retention.days=${DATA_RETENTION_DAYS:10}
+data.retention.cron=${DATA_RETENTION_CRON:0 30 3 * * *}

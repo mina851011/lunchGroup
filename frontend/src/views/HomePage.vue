@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-2xl bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center border border-stone-100 transition-all duration-300 relative">
       <router-link 
-        to="/instructions" 
+        :to="`${regionPrefix}/instructions`"
         class="absolute top-6 right-6 text-xs bg-stone-100 text-stone-500 px-3 py-1.5 rounded-full font-bold hover:bg-stone-200 transition-colors flex items-center gap-1"
       >
         📖 使用說明
@@ -24,7 +24,7 @@
                       盡量不要同時開多個團以免混亂喔！
                   </p>
                   <button 
-                      @click="router.push(`/group/${activeGroup.id}`)"
+                      @click="router.push(`${regionPrefix}/group/${activeGroup.id}`)"
                       class="bg-orange-500 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors shadow-sm"
                   >
                       👉 前往跟團
@@ -232,12 +232,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { getApiUrl } from '../utils/api'
+import '../utils/api' // side-effect: register axios interceptor
 
 const router = useRouter()
+const route = useRoute()
+
+// Detect region from route path prefix
+const region = computed(() => route.path.startsWith('/taipei') ? 'taipei' : 'taichung')
+const regionPrefix = computed(() => `/${region.value}`)
 const rawMenuText = ref('')
 const parsedMenu = ref([])
 const aiFileInput = ref(null)
@@ -268,10 +274,13 @@ const checkActiveGroup = async () => {
     try {
         const res = await axios.get('/api/groups')
         if (res.data && res.data.length > 0) {
-            // Check the latest group
-            const lastGroup = res.data[res.data.length - 1]
-            if (new Date(lastGroup.deadline) > new Date()) {
-                activeGroup.value = lastGroup
+            // Check the latest group - only if it belongs to this region
+            const regionGroups = res.data.filter(g => (g.region || 'taichung') === region.value)
+            if (regionGroups.length > 0) {
+                const lastGroup = regionGroups[regionGroups.length - 1]
+                if (new Date(lastGroup.deadline) > new Date()) {
+                    activeGroup.value = lastGroup
+                }
             }
         }
     } catch (e) {
@@ -429,7 +438,7 @@ const createGroup = async () => {
     const response = await axios.post('/api/groups', payload)
     const newGroup = response.data
     if (newGroup && newGroup.id) {
-       router.push(`/group/${newGroup.id}`)
+       router.push(`${regionPrefix.value}/group/${newGroup.id}`)
     }
   } catch (err) {
     console.error("Failed to create group:", err)

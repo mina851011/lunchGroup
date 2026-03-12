@@ -22,6 +22,7 @@ public class DiningGroup {
     private String menuImageUrl;
     private String note; // 菜單備註
     private String restaurantPhone; // 店家電話
+    private String region; // "taichung" or "taipei"
 
     public DiningGroup(String name, String deadline) {
         this.id = UUID.randomUUID().toString();

@@ -1,36 +1,47 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import LandingPage from '../views/LandingPage.vue'
 import HomePage from '../views/HomePage.vue'
 import OrderPage from '../views/OrderPage.vue'
 import GroupStats from '../views/GroupStats.vue'
 import SettlementPage from '../views/SettlementPage.vue'
 import Instructions from '../views/Instructions.vue'
 
-const routes = [
+const regionRoutes = (prefix) => [
     {
-        path: '/',
-        name: 'Home',
+        path: `/${prefix}`,
+        name: `Home-${prefix}`,
         component: HomePage
     },
     {
-        path: '/group/:groupId',
-        name: 'Order',
+        path: `/${prefix}/group/:groupId`,
+        name: `Order-${prefix}`,
         component: OrderPage
     },
     {
-        path: '/group/:groupId/stats',
-        name: 'Stats',
+        path: `/${prefix}/group/:groupId/stats`,
+        name: `Stats-${prefix}`,
         component: GroupStats
     },
     {
-        path: '/group/:groupId/settlement',
-        name: 'Settlement',
+        path: `/${prefix}/group/:groupId/settlement`,
+        name: `Settlement-${prefix}`,
         component: SettlementPage
     },
     {
-        path: '/instructions',
-        name: 'Instructions',
+        path: `/${prefix}/instructions`,
+        name: `Instructions-${prefix}`,
         component: Instructions
     }
+]
+
+const routes = [
+    {
+        path: '/',
+        name: 'Landing',
+        component: LandingPage
+    },
+    ...regionRoutes('taichung'),
+    ...regionRoutes('taipei'),
 ]
 
 const router = createRouter({

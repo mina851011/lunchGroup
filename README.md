@@ -34,10 +34,17 @@ cd lunchGroup
 ### 2. 後端設置 (Spring Boot)
 - 進入 `backend/` 目錄。
 - 複製 `src/main/resources/application.properties.example` 為 `application.properties`。
-- **本地開發**：填入 `google.sheets.spreadsheet-id` 並將金鑰 JSON 放在指定路徑。
+- **本地開發**：
+  - 填入 `google.sheets.spreadsheet-id-taichung` 與 `google.sheets.spreadsheet-id-taipei`。
+  - 並將金鑰 JSON 放在指定路徑。
 - **雲端部署 (Render/Koyeb)**：
-  - 設定環境變數 `GOOGLE_SHEETS_SPREADSHEET_ID`。
-  - 設定環境變數 `GOOGLE_SHEETS_CREDENTIALS_JSON`，直接把 **整份 JSON 檔案的內容** 貼進去。系統會優先讀取此變數。
+  - 設定環境變數 `SPREADSHEET_ID_TAICHUNG`（或 `GOOGLE_SHEETS_SPREADSHEET_ID_TAICHUNG`）。
+  - 設定環境變數 `SPREADSHEET_ID_TAIPEI`（或 `GOOGLE_SHEETS_SPREADSHEET_ID_TAIPEI`）。
+  - 設定環境變數 `GOOGLE_SHEETS_CREDENTIALS_JSON`（或 `GOOGLE_CREDENTIALS_JSON`），直接把 **整份 JSON 檔案的內容** 貼進去。系統會優先讀取此變數。
+  - 可選：設定資料保留策略
+    - `DATA_RETENTION_ENABLED=true`
+    - `DATA_RETENTION_DAYS=10`
+    - `DATA_RETENTION_CRON=0 30 3 * * *`（每天 03:30，Asia/Taipei）
 - 執行專案：
 ```bash
 ./mvnw spring-boot:run
@@ -56,9 +63,24 @@ npm run dev
 
 ## 📈 Google Sheet 結構要求
 請確保您的 Google Sheet 包含以下工作表：
-1. `Orders`: 用於存放進行中的訂單。
-2. `History Orders`: 用於存放已結單的訂單。
-3. `Restaurants`: 用於存放常用店家清單。
+1. `Groups`: 團購主檔（含 `region` 欄位）。
+2. `Menus`: 菜單品項。
+3. `Orders`: 用於存放進行中的訂單。
+4. `History Orders`: 用於存放已結單的訂單。
+5. `Restaurants`: 用於存放常用店家清單。
+
+## 🌍 多地區入口
+- 入口頁：`#/`
+- 台中：`#/taichung`
+- 台北：`#/taipei`
+
+前端會依網址自動帶 `X-Region` request header：
+- `#/taichung` → `X-Region: taichung`
+- `#/taipei` → `X-Region: taipei`
+
+## 🔔 LINE 通知規則
+- 結單 LINE 通知僅使用 `taichung` 資料來源。
+- `taipei` 不會觸發結單 LINE 推播。
 
 ## 📝 備註
 本系統由 **波奇探險隊** 榮譽出品。

@@ -1,5 +1,6 @@
 package com.example.lunch.scheduler;
 
+import com.example.lunch.config.RegionContext;
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.model.Order;
 import com.example.lunch.service.GroupService;
@@ -45,6 +46,8 @@ public class LineNotificationScheduler {
             return;
         }
 
+        // Notifications are only enabled for Taichung.
+        RegionContext.set("taichung");
         try {
             List<DiningGroup> groups = groupService.getAllGroups();
             if (groups.isEmpty()) {
@@ -53,6 +56,12 @@ public class LineNotificationScheduler {
 
             // 只檢查最新的團購
             DiningGroup latestGroup = groups.get(groups.size() - 1);
+
+            // 台北地區不發 LINE 通知
+            if ("taipei".equals(latestGroup.getRegion())) {
+                return;
+            }
+
             ZonedDateTime deadline;
 
             try {
@@ -119,6 +128,8 @@ public class LineNotificationScheduler {
         } catch (Exception e) {
             System.err.println("Error in notification scheduler: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            RegionContext.clear();
         }
     }
 

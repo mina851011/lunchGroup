@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import com.example.lunch.config.RegionContext;
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.model.MenuItem;
 import com.example.lunch.model.Order;
@@ -40,8 +41,11 @@ public class GoogleSheetsRepository {
     @Value("${google.sheets.credentials-path:src/main/resources/credentials.json}")
     private String credentialsPath;
 
-    @Value("${google.sheets.spreadsheet-id:}")
-    private String spreadsheetId;
+    @Value("${google.sheets.spreadsheet-id-taichung:}")
+    private String spreadsheetIdTaichung;
+
+    @Value("${google.sheets.spreadsheet-id-taipei:}")
+    private String spreadsheetIdTaipei;
 
     @Value("${google.sheets.credentials-json:}")
     private String credentialsJson;
@@ -101,6 +105,17 @@ public class GoogleSheetsRepository {
                 .build();
     }
 
+    private String currentSpreadsheetId() {
+        String region = RegionContext.get();
+        if ("taipei".equals(region)) {
+            if (spreadsheetIdTaipei == null || spreadsheetIdTaipei.isBlank()) {
+                throw new IllegalStateException("台北 Spreadsheet ID 尚未設定 (SPREADSHEET_ID_TAIPEI)");
+            }
+            return spreadsheetIdTaipei;
+        }
+        return spreadsheetIdTaichung;
+    }
+
     public List<List<Object>> readData(String range) throws IOException {
         if (isMockMode) {
             if (range.contains("Orders")) {
@@ -114,7 +129,7 @@ public class GoogleSheetsRepository {
             }
         }
         return sheetsService.spreadsheets().values()
-                .get(spreadsheetId, range)
+                .get(currentSpreadsheetId(), range)
                 .execute()
                 .getValues();
     }
@@ -133,7 +148,7 @@ public class GoogleSheetsRepository {
         }
         var body = new com.google.api.services.sheets.v4.model.ValueRange().setValues(values);
         sheetsService.spreadsheets().values()
-                .append(spreadsheetId, range, body)
+                .append(currentSpreadsheetId(), range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
     }
@@ -145,7 +160,7 @@ public class GoogleSheetsRepository {
         }
         var body = new com.google.api.services.sheets.v4.model.ValueRange().setValues(values);
         sheetsService.spreadsheets().values()
-                .update(spreadsheetId, range, body)
+                .update(currentSpreadsheetId(), range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute();
     }
@@ -159,7 +174,7 @@ public class GoogleSheetsRepository {
             return;
         }
         sheetsService.spreadsheets().values()
-                .clear(spreadsheetId, range, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
+                .clear(currentSpreadsheetId(), range, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
                 .execute();
     }
 
@@ -213,7 +228,7 @@ public class GoogleSheetsRepository {
         try {
             var body = new com.google.api.services.sheets.v4.model.ValueRange().setValues(rows);
             sheetsService.spreadsheets().values()
-                    .append(spreadsheetId, "Menus!A:C", body) // Assuming 'Menus' sheet exists
+                    .append(currentSpreadsheetId(), "Menus!A:C", body) // Assuming 'Menus' sheet exists
                     .setValueInputOption("USER_ENTERED")
                     .execute();
         } catch (IOException e) {
@@ -235,7 +250,7 @@ public class GoogleSheetsRepository {
             // Real Sheets Implementation
             try {
                 com.google.api.services.sheets.v4.model.ValueRange response = sheetsService.spreadsheets().values()
-                        .get(spreadsheetId, "Menus!A2:C")
+                        .get(currentSpreadsheetId(), "Menus!A2:C")
                         .execute();
                 allRows = response.getValues();
                 if (allRows == null) {
@@ -299,7 +314,7 @@ public class GoogleSheetsRepository {
             var body = new com.google.api.services.sheets.v4.model.ValueRange()
                     .setValues(Collections.singletonList(rowData));
             sheetsService.spreadsheets().values()
-                    .update(spreadsheetId, updateRange, body)
+                    .update(currentSpreadsheetId(), updateRange, body)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
             log.info("Updated restaurant: {} at row {}", restaurant.getName(), rowIndex);
@@ -390,7 +405,7 @@ public class GoogleSheetsRepository {
             var body = new com.google.api.services.sheets.v4.model.ValueRange()
                     .setValues(Collections.singletonList(Collections.singletonList(newDeadline)));
             sheetsService.spreadsheets().values()
-                    .update(spreadsheetId, range, body)
+                    .update(currentSpreadsheetId(), range, body)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
         } else {
