@@ -12,10 +12,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/ocr")
 public class OcrController {
+    private static final Pattern HAS_CJK = Pattern.compile(".*\\p{IsHan}+.*");
+    private static final Pattern HAS_LATIN = Pattern.compile(".*[A-Za-z]+.*");
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
@@ -85,12 +88,11 @@ public class OcrController {
             List<Map<String, Object>> parts = new ArrayList<>();
 
             parts.add(Map.of("text",
-                    "You are a menu parsing assistant. Analyze the provided image of a food menu. " +
-                            "Extract all food items and their prices. " +
-                            "Return ONLY a raw JSON array of objects with keys 'name' (string) and 'price' (integer). "
-                            +
-                            "Do not include markdown formatting (```json). " +
-                            "Ignore section headers or non-food text."));
+                    "你是台灣便當菜單 OCR 助理。請從圖片中擷取餐點與價格，並只輸出 JSON 陣列。"
+                            + "輸出格式必須是 [{\"name\":\"...\",\"price\":123}]。"
+                            + "name 請優先使用繁體中文品名；若同一品項同時有中英文，只保留中文品名。"
+                            + "忽略分類標題、敘述文字、熱量、活動文字。"
+                            + "不要輸出 markdown，不要輸出任何額外說明。"));
 
             parts.add(Map.of("inline_data", Map.of(
                     "mime_type", file.getContentType() != null ? file.getContentType() : "image/jpeg",
@@ -98,6 +100,9 @@ public class OcrController {
 
             content.put("parts", parts);
             requestBody.put("contents", List.of(content));
+            requestBody.put("generationConfig", Map.of(
+                    "temperature", 0.1,
+                    "responseMimeType", "application/json"));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -112,6 +117,9 @@ public class OcrController {
                 text = text.replaceAll("```json", "").replaceAll("```", "").trim();
 
                 MenuItem[] menuItems = objectMapper.readValue(text, MenuItem[].class);
+                for (MenuItem item : menuItems) {
+                    item.setName(normalizeMenuName(item.getName()));
+                }
 
                 return ResponseEntity.ok(Map.of(
                         "items", menuItems,
@@ -129,5 +137,49 @@ public class OcrController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to process image: " + e.getMessage()));
         }
+    }
+
+    private String normalizeMenuName(String rawName) {
+        if (rawName == null) {
+            return "";
+        }
+
+        String name = rawName.trim();
+        if (name.isEmpty()) {
+            return name;
+        }
+
+        // If mixed Chinese + English and Chinese appears first, keep Chinese segment.
+        if (HAS_CJK.matcher(name).matches() && HAS_LATIN.matcher(name).matches()) {
+            int firstLatin = firstLatinIndex(name);
+            int firstHan = firstHanIndex(name);
+            if (firstHan >= 0 && firstLatin > firstHan) {
+                name = name.substring(0, firstLatin).trim();
+            }
+        }
+
+        // Remove trailing separators left by truncation.
+        name = name.replaceAll("[\\s\\-_/|,:;]+$", "").trim();
+        return name;
+    }
+
+    private int firstLatinIndex(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int firstHanIndex(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            Character.UnicodeScript script = Character.UnicodeScript.of(text.charAt(i));
+            if (script == Character.UnicodeScript.HAN) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

@@ -70,11 +70,11 @@
             <span class="text-2xl">📊</span> 後台 Excel
           </h2>
           <a 
-            href="https://docs.google.com/spreadsheets/d/1ytTayvYMMmE67lYgfzbN_2u_KQPyR6ETGGUi5T4qY-0/edit?usp=sharing" 
+            :href="excelUrl"
             target="_blank"
             class="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-bold bg-green-50 px-4 py-3 rounded-xl border border-green-100 hover:bg-green-100 transition-colors w-full md:w-auto justify-center"
           >
-            <span>打開 Google Sheets 試算表</span>
+            <span>打開 {{ regionLabel }} Google Sheets 試算表</span>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
           </a>
         </section>
@@ -85,5 +85,18 @@
 </template>
 
 <script setup>
-// No script logic needed for this static page
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const region = computed(() => route.path.startsWith('/taipei') ? 'taipei' : 'taichung')
+const regionLabel = computed(() => region.value === 'taipei' ? '台北' : '台中')
+
+const SHEET_URLS = {
+  taichung: 'https://docs.google.com/spreadsheets/d/1i3xq5Cy5uZbaudKneI0esoEndit7sIWelBw4rtbbz2c/edit?usp=sharing',
+  taipei: 'https://docs.google.com/spreadsheets/d/1OmgOAGykB11e1ZEUxfw93A4_S6rMVbVZASWu6EggZrY/edit?usp=sharing'
+}
+
+const excelUrl = computed(() => SHEET_URLS[region.value])
 </script>

@@ -113,6 +113,9 @@ public class GoogleSheetsRepository {
             }
             return spreadsheetIdTaipei;
         }
+        if (spreadsheetIdTaichung == null || spreadsheetIdTaichung.isBlank()) {
+            throw new IllegalStateException("台中 Spreadsheet ID 尚未設定 (SPREADSHEET_ID_TAICHUNG)");
+        }
         return spreadsheetIdTaichung;
     }
 
