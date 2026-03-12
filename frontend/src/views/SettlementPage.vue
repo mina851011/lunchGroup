@@ -93,7 +93,7 @@
       <!-- Back Button -->
       <div class="mt-8 text-center">
         <router-link 
-          :to="`/group/${groupId}`"
+          :to="`${regionPrefix}/group/${groupId}`"
           class="text-mocha-primary font-medium hover:underline"
         >
           ← 返回點餐頁
@@ -122,6 +122,7 @@ const getRiceLabel = (val) => {
 
 const route = useRoute()
 const groupId = route.params.groupId
+const regionPrefix = computed(() => route.path.startsWith('/taipei') ? '/taipei' : '/taichung')
 
 const group = ref(null)
 const orders = ref([])

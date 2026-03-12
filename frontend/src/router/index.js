@@ -40,6 +40,11 @@ const routes = [
         name: 'Landing',
         component: LandingPage
     },
+    // Backward-compatible redirects for legacy links without region prefix.
+    { path: '/group/:groupId', redirect: to => `/taichung/group/${to.params.groupId}` },
+    { path: '/group/:groupId/stats', redirect: to => `/taichung/group/${to.params.groupId}/stats` },
+    { path: '/group/:groupId/settlement', redirect: to => `/taichung/group/${to.params.groupId}/settlement` },
+    { path: '/instructions', redirect: '/taichung/instructions' },
     ...regionRoutes('taichung'),
     ...regionRoutes('taipei'),
 ]

@@ -23,7 +23,7 @@
           
           <!-- Settlement Page Button -->
           <router-link 
-            :to="`/group/${group.id}/settlement`"
+            :to="`${regionPrefix}/group/${group.id}/settlement`"
             class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold hover:bg-green-200 transition-colors flex items-center gap-1 shadow-sm border border-green-200"
           >
             💰 結算收款
@@ -270,6 +270,7 @@ import { getApiUrl } from '../utils/api'
 
 const route = useRoute()
 const groupId = route.params.groupId
+const regionPrefix = computed(() => route.path.startsWith('/taipei') ? '/taipei' : '/taichung')
 
 const group = ref(null)
 const orders = ref([])
