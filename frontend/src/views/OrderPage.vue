@@ -287,7 +287,14 @@ const isExpired = computed(() => {
 })
 
 const copyShareLink = () => {
-  navigator.clipboard.writeText(window.location.href)
+  const url = window.location.href
+  const groupName = group.value?.name || '午餐團'
+  const deadlineLabel = formatDeadlineTimeOnly(group.value?.deadline)
+  const shareText = deadlineLabel
+    ? `${url}\n${groupName} ${deadlineLabel} 結單`
+    : `${url}\n${groupName}`
+
+  navigator.clipboard.writeText(shareText)
   copied.value = true
   setTimeout(() => copied.value = false, 2000)
 }
@@ -326,6 +333,13 @@ const formatDateShort = (timestamp) => {
     const d = new Date(timestamp)
     if (isNaN(d.getTime())) return '' 
     return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+}
+
+const formatDeadlineTimeOnly = (deadline) => {
+    if (!deadline) return ''
+    const d = new Date(deadline)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 const fetchGroupData = async () => {
