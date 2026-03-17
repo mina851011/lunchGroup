@@ -24,6 +24,8 @@ public class OrderService {
     private GoogleSheetsRepository repository;
 
     private static final String RANGE_ORDERS = "Orders!A2:K";
+    private static final int QUANTITY_COLUMN_INDEX = 6;
+    private static final int TOTAL_PRICE_COLUMN_INDEX = 7;
 
     public Order addOrder(Order order) throws IOException {
         log.info("[ADD_ORDER] Starting - User: {}, Item: {}, GroupId: {}",
@@ -107,10 +109,10 @@ public class OrderService {
             int totalSum = 0;
             int totalCount = 0;
             for (List<Object> r : currentGroupOrders) {
-                if (r.size() >= 8) {
+                if (r.size() > TOTAL_PRICE_COLUMN_INDEX) {
                     try {
-                        totalSum += Integer.parseInt(r.get(7).toString());
-                        totalCount++;
+                        totalSum += Integer.parseInt(r.get(TOTAL_PRICE_COLUMN_INDEX).toString());
+                        totalCount += parseQuantity(r);
                     } catch (Exception e) {
                         log.warn("[ADD_ORDER] Failed to parse total for row: {}", r.get(0));
                     }
@@ -210,10 +212,10 @@ public class OrderService {
         int totalSum = 0;
         int totalCount = 0;
         for (List<Object> r : remainingRows) {
-            if (r.size() >= 8) {
+            if (r.size() > TOTAL_PRICE_COLUMN_INDEX) {
                 try {
-                    totalSum += Integer.parseInt(r.get(7).toString());
-                    totalCount++;
+                    totalSum += Integer.parseInt(r.get(TOTAL_PRICE_COLUMN_INDEX).toString());
+                    totalCount += parseQuantity(r);
                 } catch (Exception e) {
                 }
             }
@@ -285,5 +287,17 @@ public class OrderService {
         }
 
         return false;
+    }
+
+    private int parseQuantity(List<Object> row) {
+        if (row.size() <= QUANTITY_COLUMN_INDEX) {
+            return 1;
+        }
+
+        try {
+            return Integer.parseInt(String.valueOf(row.get(QUANTITY_COLUMN_INDEX)));
+        } catch (Exception e) {
+            return 1;
+        }
     }
 }

@@ -24,6 +24,8 @@ public class DataRetentionService {
 
     private static final ZoneId TAIPEI_ZONE = ZoneId.of("Asia/Taipei");
     private static final DateTimeFormatter LEGACY_DATETIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final int QUANTITY_COLUMN_INDEX = 6;
+    private static final int TOTAL_PRICE_COLUMN_INDEX = 7;
 
     private final GoogleSheetsRepository repository;
 
@@ -151,10 +153,10 @@ public class DataRetentionService {
         int totalSum = 0;
         int totalCount = 0;
         for (List<Object> row : orders) {
-            if (row.size() > 7) {
+            if (row.size() > TOTAL_PRICE_COLUMN_INDEX) {
                 try {
-                    totalSum += Integer.parseInt(String.valueOf(row.get(7)));
-                    totalCount++;
+                    totalSum += Integer.parseInt(String.valueOf(row.get(TOTAL_PRICE_COLUMN_INDEX)));
+                    totalCount += parseQuantity(row);
                 } catch (Exception ignored) {
                 }
             }
@@ -181,6 +183,18 @@ public class DataRetentionService {
         repository.clearData(range);
         if (!rows.isEmpty()) {
             repository.updateData(range, rows);
+        }
+    }
+
+    private int parseQuantity(List<Object> row) {
+        if (row.size() <= QUANTITY_COLUMN_INDEX) {
+            return 1;
+        }
+
+        try {
+            return Integer.parseInt(String.valueOf(row.get(QUANTITY_COLUMN_INDEX)));
+        } catch (Exception e) {
+            return 1;
         }
     }
 }
