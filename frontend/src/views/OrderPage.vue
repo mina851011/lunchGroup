@@ -37,9 +37,6 @@
           <a v-if="group.restaurantPhone" :href="`tel:${group.restaurantPhone}`" class="font-bold text-white bg-green-500 hover:bg-green-600 px-2 py-0.5 rounded text-sm flex items-center gap-1 transition-colors">
              📞 {{ group.restaurantPhone }}
           </a>
-          <span v-if="group.note" class="text-stone-500 bg-stone-100 px-2 py-0.5 rounded text-sm flex items-center gap-1 border border-stone-200">
-             📝 {{ group.note }}
-          </span>
           <span class="w-1 h-1 rounded-full bg-stone-300"></span>
           <span>結單：{{ formatDate(group.deadline) }}</span>
         </p>
@@ -196,66 +193,81 @@
             </form>
         </div>
 
-        <!-- Orders List -->
-        <div class="bg-white/50 backdrop-blur-sm rounded-[2rem] p-6 md:p-8 border border-stone-100">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-mocha-dark">📋 訂單列表</h2>
-            <span class="bg-mocha-primary/10 text-mocha-primary px-3 py-1 rounded-full text-sm font-bold">
-              {{ orders.length }} 人已點
-            </span>
-          </div>
+        <!-- Orders List + Group Note -->
+        <div :class="group?.note ? 'grid lg:grid-cols-[minmax(0,1fr)_126px] gap-4 items-start' : 'block'">
+          <div class="bg-white/50 backdrop-blur-sm rounded-[2rem] p-6 md:p-8 border border-stone-100">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-mocha-dark">📋 訂單列表</h2>
+              <span class="bg-mocha-primary/10 text-mocha-primary px-3 py-1 rounded-full text-sm font-bold">
+                {{ orders.length }} 人已點
+              </span>
+            </div>
 
-          <div v-if="orders.length === 0" class="text-center py-10 text-stone-400">
-            <p>還沒有人點餐，搶頭香！</p>
-          </div>
+            <div v-if="orders.length === 0" class="text-center py-10 text-stone-400">
+              <p>還沒有人點餐，搶頭香！</p>
+            </div>
 
-          <div v-else class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            <div 
-              v-for="order in orders" 
-              :key="order.id"
-              class="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgb(0,0,0,0.02)] border border-stone-50 h-fit"
-            >
-              <div class="flex justify-between items-start mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-mocha-dark">{{ order.userName }}</span>
-                  <span class="text-[10px] px-2 py-0.5 bg-stone-100 rounded text-stone-400 uppercase tracking-tighter">{{ formatDateShort(order.createdAt) }}</span>
+            <div v-else class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+              <div 
+                v-for="order in orders" 
+                :key="order.id"
+                class="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgb(0,0,0,0.02)] border border-stone-50 h-fit"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-mocha-dark">{{ order.userName }}</span>
+                    <span class="text-[10px] px-2 py-0.5 bg-stone-100 rounded text-stone-400 uppercase tracking-tighter">{{ formatDateShort(order.createdAt) }}</span>
+                  </div>
+                  <div class="font-bold text-mocha-primary">
+                    ${{ order.totalPrice }}
+                  </div>
                 </div>
-                <div class="font-bold text-mocha-primary">
-                  ${{ order.totalPrice }}
-                </div>
-              </div>
 
-              <div class="flex items-center gap-3">
-                 <div class="flex-1">
+                <div class="flex items-center gap-3">
+                  <div class="flex-1">
                     <p class="text-mocha-text text-sm font-medium flex items-center gap-2">
-                        <span class="bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded text-xs font-bold">x{{ order.quantity }}</span>
-                        {{ order.itemName }}
-                        <span v-if="order.riceLevel !== 'FULL'" class="text-[10px] border border-orange-200 text-orange-500 px-1.5 py-0.5 rounded-full font-bold">
-                            {{ getRiceLabel(order.riceLevel) }}
-                        </span>
+                      <span class="bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded text-xs font-bold">x{{ order.quantity }}</span>
+                      {{ order.itemName }}
+                      <span v-if="order.riceLevel !== 'FULL'" class="text-[10px] border border-orange-200 text-orange-500 px-1.5 py-0.5 rounded-full font-bold">
+                        {{ getRiceLabel(order.riceLevel) }}
+                      </span>
                     </p>
                     <p v-if="order.note" class="text-stone-400 text-xs mt-1 border-l-2 border-stone-200 pl-2 py-0.5">
-                        {{ order.note }}
+                      {{ order.note }}
                     </p>
-                 </div>
-                 <button 
-                   v-if="!isExpired"
-                   @click="deleteOrder(order.id)"
-                   class="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                   title="刪除訂單"
-                 >
-                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                   </svg>
-                 </button>
+                  </div>
+                  <button 
+                    v-if="!isExpired"
+                    @click="deleteOrder(order.id)"
+                    class="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    title="刪除訂單"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
+            
+            <div v-if="orders.length > 0" class="mt-6 pt-6 border-t border-stone-100 flex justify-between items-center text-mocha-dark">
+              <span class="font-medium">總計金額</span>
+              <span class="text-2xl font-bold">${{ totalAmount }}</span>
+            </div>
           </div>
-          
-          <div v-if="orders.length > 0" class="mt-6 pt-6 border-t border-stone-100 flex justify-between items-center text-mocha-dark">
-            <span class="font-medium">總計金額</span>
-            <span class="text-2xl font-bold">${{ totalAmount }}</span>
-          </div>
+
+          <aside
+            v-if="group?.note"
+            class="bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-4 lg:sticky lg:top-8 min-h-[160px] lg:min-h-[420px] shadow-[0_4px_18px_rgb(0,0,0,0.04)]"
+          >
+            <div class="lg:h-full flex flex-col">
+              <div class="text-xs font-bold tracking-[0.24em] text-stone-400 uppercase mb-3 text-center">Note</div>
+              <div class="hidden lg:block w-10 h-px bg-stone-200 mx-auto mb-4"></div>
+              <div class="text-sm text-stone-600 leading-7 whitespace-pre-wrap break-words text-center lg:text-left lg:[writing-mode:vertical-rl] lg:[text-orientation:mixed] lg:mx-auto">
+                {{ group.note }}
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
