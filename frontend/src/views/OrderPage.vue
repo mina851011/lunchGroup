@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-[1420px] mx-auto space-y-6">
       
       <!-- Header / Group Info -->
       <header v-if="group" class="text-center space-y-2 mb-8">
@@ -45,7 +45,7 @@
         載入中...
       </div>
 
-      <div class="grid md:grid-cols-[3fr_2fr] gap-6">
+      <div class="grid xl:grid-cols-[minmax(0,1.65fr)_minmax(680px,1fr)] gap-6 items-start">
         
         <!-- Order Form -->
         <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-100 h-fit">
@@ -194,7 +194,7 @@
         </div>
 
         <!-- Orders List + Group Note -->
-        <div :class="group?.note ? 'grid lg:grid-cols-[minmax(0,1fr)_126px] gap-4 items-start' : 'block'">
+        <div :class="group?.note ? 'grid lg:grid-cols-[minmax(420px,1fr)_252px] gap-4 items-start' : 'block'">
           <div class="bg-white/50 backdrop-blur-sm rounded-[2rem] p-6 md:p-8 border border-stone-100">
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl font-bold text-mocha-dark">📋 訂單列表</h2>
@@ -258,12 +258,12 @@
 
           <aside
             v-if="group?.note"
-            class="bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-4 lg:sticky lg:top-8 min-h-[160px] lg:min-h-[420px] shadow-[0_4px_18px_rgb(0,0,0,0.04)]"
+            class="bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-5 lg:sticky lg:top-8 min-h-[160px] lg:min-h-[420px] shadow-[0_4px_18px_rgb(0,0,0,0.04)]"
           >
             <div class="lg:h-full flex flex-col">
               <div class="text-xs font-bold tracking-[0.24em] text-stone-400 uppercase mb-3 text-center">Note</div>
-              <div class="hidden lg:block w-10 h-px bg-stone-200 mx-auto mb-4"></div>
-              <div class="text-sm text-stone-600 leading-7 whitespace-pre-wrap break-words text-center lg:text-left lg:[writing-mode:vertical-rl] lg:[text-orientation:mixed] lg:mx-auto">
+              <div class="w-12 h-px bg-stone-200 mx-auto mb-4"></div>
+              <div class="text-sm text-stone-600 leading-7 whitespace-pre-wrap break-words text-left">
                 {{ group.note }}
               </div>
             </div>
