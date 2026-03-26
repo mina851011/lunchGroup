@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen p-4 md:p-8">
-    <div class="max-w-[1320px] mx-auto space-y-6">
+    <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Header / Group Info -->
       <header v-if="group" class="text-center space-y-2 mb-8">
@@ -45,8 +45,8 @@
         載入中...
       </div>
 
-      <div v-if="group?.note" class="xl:hidden">
-        <aside class="bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-5 min-h-[140px] shadow-[0_4px_18px_rgb(0,0,0,0.04)]">
+      <div v-if="group?.note" class="flex justify-center">
+        <aside class="bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-5 min-h-[140px] shadow-[0_4px_18px_rgb(0,0,0,0.04)] w-full max-w-xl">
           <div class="flex flex-col">
             <div class="text-xs font-bold tracking-[0.24em] text-stone-400 uppercase mb-3 text-center">Note</div>
             <div class="w-12 h-px bg-stone-200 mx-auto mb-4"></div>
@@ -57,7 +57,7 @@
         </aside>
       </div>
 
-      <div class="grid xl:grid-cols-[minmax(0,1.55fr)_minmax(560px,0.95fr)] gap-6 items-start">
+      <div class="grid md:grid-cols-[3fr_2fr] gap-6">
         
         <!-- Order Form -->
         <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-stone-100 h-fit">
@@ -206,8 +206,7 @@
         </div>
 
         <!-- Orders List + Group Note -->
-        <div :class="group?.note ? 'grid xl:grid-cols-[minmax(400px,1fr)_252px] gap-4 items-start' : 'block'">
-          <div class="bg-white/50 backdrop-blur-sm rounded-[2rem] p-6 md:p-8 border border-stone-100">
+        <div class="bg-white/50 backdrop-blur-sm rounded-[2rem] p-6 md:p-8 border border-stone-100">
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl font-bold text-mocha-dark">📋 訂單列表</h2>
               <span class="bg-mocha-primary/10 text-mocha-primary px-3 py-1 rounded-full text-sm font-bold">
@@ -266,20 +265,6 @@
               <span class="font-medium">總計金額</span>
               <span class="text-2xl font-bold">${{ totalAmount }}</span>
             </div>
-          </div>
-
-          <aside
-            v-if="group?.note"
-            class="hidden xl:block bg-gradient-to-b from-stone-50 to-white rounded-[2rem] border border-stone-200 p-5 sticky top-8 min-h-[160px] shadow-[0_4px_18px_rgb(0,0,0,0.04)]"
-          >
-            <div class="flex flex-col">
-              <div class="text-xs font-bold tracking-[0.24em] text-stone-400 uppercase mb-3 text-center">Note</div>
-              <div class="w-12 h-px bg-stone-200 mx-auto mb-4"></div>
-              <div class="text-sm text-stone-600 leading-7 whitespace-pre-wrap break-words text-left">
-                {{ group.note }}
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>
