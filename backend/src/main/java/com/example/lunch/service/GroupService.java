@@ -91,7 +91,7 @@ public class GroupService {
         return group;
     }
 
-    @Cacheable(value = "groups", unless = "#result.isEmpty()")
+    @Cacheable(value = "groups", key = "T(com.example.lunch.config.RegionContext).get()", unless = "#result.isEmpty()")
     public List<DiningGroup> getAllGroups() throws IOException {
         List<List<Object>> values = repository.readData(RANGE_GROUPS);
         if (values == null || values.isEmpty()) {
@@ -155,5 +155,11 @@ public class GroupService {
         }
         // Then update deadline (scheduler will see it as expired but already sent)
         updateDeadline(groupId, newDeadline);
+    }
+
+    public void markSummarySent(String groupId) {
+        if (notificationScheduler != null) {
+            notificationScheduler.markGroupAsSummarySent(groupId);
+        }
     }
 }

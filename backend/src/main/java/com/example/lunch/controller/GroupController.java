@@ -2,6 +2,7 @@ package com.example.lunch.controller;
 
 import com.example.lunch.model.DiningGroup;
 import com.example.lunch.model.Order;
+import com.example.lunch.service.LineNotificationService;
 import com.example.lunch.service.GroupService;
 import com.example.lunch.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class GroupController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired(required = false)
+    private LineNotificationService lineNotificationService;
 
     @PostMapping
     public ResponseEntity<DiningGroup> createGroup(@RequestBody Map<String, Object> payload) throws IOException {
@@ -82,6 +86,52 @@ public class GroupController {
             e.printStackTrace();
             return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to quiet close: " + e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{id}/close-and-notify")
+    public ResponseEntity<?> closeAndNotify(@PathVariable String id, @RequestBody Map<String, String> payload) {
+        try {
+            String newDeadline = payload.get("deadline");
+            if (newDeadline == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing deadline"));
+            }
+
+            DiningGroup group = groupService.getGroup(id);
+            if (group == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            groupService.updateDeadline(id, newDeadline);
+
+            if ("taipei".equals(group.getRegion())) {
+                groupService.markSummarySent(id);
+                return ResponseEntity.ok(Map.of("message", "Group closed. Taipei region does not send LINE notifications."));
+            }
+
+            if (lineNotificationService == null) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(Map.of("error", "LINE notification service is not configured"));
+            }
+
+            List<Order> orders = orderService.getOrdersByGroup(id);
+            if (orders.isEmpty()) {
+                groupService.markSummarySent(id);
+                return ResponseEntity.ok(Map.of("message", "Group closed. No orders to notify."));
+            }
+
+            lineNotificationService.sendOrderSummaryAndStatistics(
+                    group.getName(),
+                    newDeadline,
+                    group.getRestaurantPhone(),
+                    orders);
+            groupService.markSummarySent(id);
+
+            return ResponseEntity.ok(Map.of("message", "Group closed and LINE notification sent"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to close and notify: " + e.getMessage()));
         }
     }
 

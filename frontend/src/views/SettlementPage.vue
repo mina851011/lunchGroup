@@ -7,12 +7,18 @@
         <div v-if="isExpired" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold inline-block">
           ✅ 已結單
         </div>
-        <div class="flex gap-2 justify-center" v-else>
+        <div class="flex gap-2 justify-center flex-wrap">
+          <button 
+            @click="extendDeadline"
+            class="px-4 py-1.5 bg-orange-100 text-orange-600 rounded-full text-xs font-bold hover:bg-orange-200 transition-colors inline-flex items-center gap-1"
+          >
+            ⏰ 延長結單時間
+          </button>
           <button 
             @click="closeOrder"
             class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-xs font-bold hover:bg-red-200 transition-colors inline-flex items-center gap-1"
           >
-            🛑 立即結單 (發送通知)
+            🛑 關團結單 (發送 LINE)
           </button>
           <button 
             @click="quietClose"
@@ -169,15 +175,42 @@ const togglePaid = async (order) => {
 }
 
 const closeOrder = async () => {
-    if (!confirm('確定要立即結單嗎？這會發送 LINE 通知。')) return
+    if (!confirm('確定要關團結單並立即發送 LINE 通知嗎？')) return
     
     try {
         const deadlineStr = getLocalDeadlineStr()
-        await axios.patch(`/api/groups/${groupId}/deadline`, { deadline: deadlineStr })
+        await axios.patch(`/api/groups/${groupId}/close-and-notify`, { deadline: deadlineStr })
+        alert('已關團並發送 LINE 通知。')
         await fetchData()
     } catch (err) {
         console.error("Close order error", err)
-        alert('結單失敗')
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message
+        alert(`結單或通知失敗: ${errorMessage}`)
+    }
+}
+
+const extendDeadline = async () => {
+    const defaultVal = new Date(Date.now() + 3600000).toLocaleString('sv').slice(0, 16).replace('T', ' ')
+    const newDateStr = prompt("請輸入新的結單時間 (格式: YYYY-MM-DD HH:mm)", defaultVal)
+    if (!newDateStr) return
+
+    try {
+        const normalized = newDateStr.trim().replace(' ', 'T')
+        const dateObj = new Date(normalized)
+        
+        if (isNaN(dateObj.getTime())) {
+            alert("日期格式錯誤，請依照 YYYY-MM-DD HH:mm 格式輸入")
+            return
+        }
+
+        const deadlineStr = formatLocalDeadline(dateObj)
+        await axios.patch(`/api/groups/${groupId}/deadline`, { deadline: deadlineStr })
+        alert("結單時間已延長。")
+        await fetchData()
+    } catch (err) {
+        console.error("Extend deadline error", err)
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message
+        alert(`延長失敗: ${errorMessage}`)
     }
 }
 
@@ -196,12 +229,16 @@ const quietClose = async () => {
 
 const getLocalDeadlineStr = () => {
     const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hour = String(now.getHours()).padStart(2, '0')
-    const minute = String(now.getMinutes()).padStart(2, '0')
-    const second = String(now.getSeconds()).padStart(2, '0')
+    return formatLocalDeadline(now)
+}
+
+const formatLocalDeadline = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    const second = String(date.getSeconds()).padStart(2, '0')
     return `${year}-${month}-${day}T${hour}:${minute}:${second}`
 }
 

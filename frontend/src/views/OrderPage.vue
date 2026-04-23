@@ -20,6 +20,13 @@
           <a v-if="group.menuImageUrl" :href="getApiUrl(group.menuImageUrl)" target="_blank" class="px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-xs font-bold hover:bg-stone-200 transition-colors flex items-center gap-1 shadow-sm border border-stone-200">
              🖼️ 查看原圖
           </a>
+
+          <button 
+            @click="extendDeadline"
+            class="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-bold hover:bg-orange-200 transition-colors flex items-center gap-1 shadow-sm border border-orange-200"
+          >
+            ⏰ 延長結單
+          </button>
           
           <!-- Settlement Page Button -->
           <router-link 
